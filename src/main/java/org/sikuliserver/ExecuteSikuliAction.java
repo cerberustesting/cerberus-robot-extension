@@ -45,14 +45,15 @@ public class ExecuteSikuliAction extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String pictureName = "sikuliPicture.png";
+        String pictureName = "sikuliPicture.";
+        PrintStream os = null;
         try {
-            System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date()) 
-                    + " INFO - Received: [Request from " + request.getServerName()+"]");
+            System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
+                    + " INFO - Received: [Request from " + request.getServerName() + "]");
 
             BufferedReader is = new BufferedReader(new InputStreamReader(
                     request.getInputStream()));
-            PrintStream os = new PrintStream(response.getOutputStream());
+            os = new PrintStream(response.getOutputStream());
             String line = "";
 
             StringBuilder sb = new StringBuilder();
@@ -65,30 +66,65 @@ public class ExecuteSikuliAction extends HttpServlet {
             String action = obj.getString("action");
             String picture = obj.getString("picture");
             String text = obj.getString("text");
+            int defaultWait = obj.getInt("defaultWait");
+            String extension = obj.getString("pictureExtension");
             String start = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
 
+            long start_time = System.currentTimeMillis();
+            long end_time = start_time + defaultWait;
+            System.out.println(defaultWait);
 //            System.out.println(start + " INFO - Receiving picture [" 
 //                    + picture.substring(1, 100) + "...] and naming it sikuliPicture.png");
             byte[] data = Base64.decodeBase64(picture);
-            try (OutputStream stream = new FileOutputStream(pictureName)) {
+
+            try (OutputStream stream = new FileOutputStream(pictureName + extension)) {
                 stream.write(data);
             }
-            
-            System.out.println(start + " INFO - Executing: [" + action + ": on picture ./"+pictureName+"]");
 
+            System.out.println(start + " INFO - Executing: [" + action + ": on picture ./" + pictureName + extension + "]");
+
+            int actionResult = 0;
             SikuliAction sikuliAction = new SikuliAction();
-            sikuliAction.doAction(action, pictureName, text);
+
+            boolean actionSuccess = false;
+            while (System.currentTimeMillis() < end_time) {
+                try {
+                    actionResult = sikuliAction.doAction(action, pictureName + extension, text);
+                    actionSuccess = true;
+                    break;
+                } catch (FindFailed ex) {
+                    System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
+                            + " INFO - Element Not Found : " + ex);
+                    System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
+                            + " INFO - Retrying again during " + (System.currentTimeMillis() - end_time) + "ms");
+                }
+            }
+            if (!actionSuccess) {
+                System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
+                        + " INFO - Element Not Found : " + pictureName + extension);
+                os.println("Failed");
+                os.println("|ENDR|");
+
+            }
 
             String end = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
-            System.out.println(end + " INFO - Done [" + action + "]");
-            os.println(end + " INFO - End of action [" + action + "]");
+            System.out.println(end + " INFO - Done [" + action + "] with result:" + actionResult);
+            os.println(actionResult);
             os.println("|ENDR|");
         } catch (IOException e) {
-            System.out.println("No I/O");
-        } catch (FindFailed ex) {
-            Logger.getLogger(QueueReceiver.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
+                    + " IOException : " + e);
+            if (os != null) {
+                os.println("Failed");
+                os.println("|ENDR|");
+            }
         } catch (JSONException ex) {
-            Logger.getLogger(QueueReceiver.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
+                    + " JSON Badly formated : " + ex);
+            if (os != null) {
+                os.println("Failed");
+                os.println("|ENDR|");
+            }
         }
     }
 

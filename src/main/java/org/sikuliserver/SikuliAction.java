@@ -15,36 +15,36 @@ import org.sikuli.script.Screen;
  */
 public class SikuliAction {
 
-    void doAction(String action, String picture, String text) throws FindFailed {
-
+    int doAction(String action, String picture, String text) throws FindFailed {
+        int result = 0;
         Screen s = new Screen();
 
         switch (action) {
             case "click":
-                s.click(picture);
+                result = s.click(picture);
                 break;
             case "doubleClick":
-                s.doubleClick(picture);
+                result = s.doubleClick(picture);
                 break;
             case "rightClick":
-                s.rightClick(picture);
+                result = s.rightClick(picture);
                 break;
             case "mouseOver":
-                s.hover(picture);
+                result = s.hover(picture);
                 break;
             case "wait":
                 s.wait(picture);
                 break;
             case "type":
-                s.paste(picture, text);
+                result = s.paste(picture, text);
                 break;
             case "keyPress":
                 switch (text) {
                     case "Key.TAB":
-                        s.type(picture, Key.TAB);
+                        result = s.type(picture, Key.TAB);
                         break;
                     case "Key.SHIFT":
-                        s.type(picture, Key.SHIFT);
+                        result = s.type(picture, Key.SHIFT);
                         break;
                 }
                 ;
@@ -54,7 +54,9 @@ public class SikuliAction {
                 break;
             case "takeScreenshot":
                 s.capture(s.getBounds());
-                //TODO Send picture to Cerberus
+                break;
+            //TODO Send picture to Cerberus
         }
+        return result;
     }
 }
