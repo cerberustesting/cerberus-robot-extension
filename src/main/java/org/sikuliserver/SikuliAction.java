@@ -34,6 +34,7 @@ public class SikuliAction {
                 break;
             case "wait":
                 s.wait(picture);
+                result = 1;
                 break;
             case "type":
                 result = s.paste(picture, text);

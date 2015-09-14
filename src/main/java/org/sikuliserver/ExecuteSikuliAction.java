@@ -90,14 +90,18 @@ public class ExecuteSikuliAction extends HttpServlet {
             while (System.currentTimeMillis() < end_time) {
                 try {
                     actionResult = sikuliAction.doAction(action, pictureName + extension, text);
-                    actionSuccess = true;
-                    break;
+                    if (actionResult == 1) {
+                        actionSuccess = true;
+                        break;
+                    }
                 } catch (FindFailed ex) {
                     System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
                             + " INFO - Element Not Found : " + ex);
                     System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
                             + " INFO - Retrying again during " + (System.currentTimeMillis() - end_time) + "ms");
                 }
+                System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
+                            + " INFO - "+action+": Still Waiting " + (System.currentTimeMillis() - end_time) + "ms");
             }
             if (!actionSuccess) {
                 System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
