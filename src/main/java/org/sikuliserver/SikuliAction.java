@@ -37,7 +37,10 @@ public class SikuliAction {
                 result = 1;
                 break;
             case "type":
-                result = s.paste(picture, text);
+                result = s.click(picture);
+                if (result == 1){
+                result = s.paste(text);
+                }
                 break;
             case "keyPress":
                 switch (text) {
