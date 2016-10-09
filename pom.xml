@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org</groupId>
     <artifactId>cerberus-extension-sikuli</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -44,9 +44,9 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>org.sikuli</groupId>
-            <artifactId>sikuli-script</artifactId>
-            <version>1.2.0</version>
+            <groupId>com.sikulix</groupId>
+            <artifactId>sikulixapi</artifactId>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
