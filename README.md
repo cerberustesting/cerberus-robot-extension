@@ -1,6 +1,6 @@
 # cerberus-extension-sikuli
 
-This project allow to use Cerberus (https://github.com/vertigo17/Cerberus) from version 1.2 with sikuli (http://www.sikuli.org) as a Selenium extension. This extension will extend the selenium server that will be used to run your script.
+This project allow to use Cerberus (https://github.com/cerberustesting/cerberus-source) from version 1.2 with sikuli (http://www.sikuli.org) as a Selenium extension. This extension will extend the selenium server that will be used to run your script.
 
 To use it, you will need to:
 
