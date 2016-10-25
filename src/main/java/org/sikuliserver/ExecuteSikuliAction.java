@@ -6,6 +6,7 @@
 package org.sikuliserver;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.sikuli.script.FindFailed;
@@ -40,7 +42,21 @@ public class ExecuteSikuliAction extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String pictureName = "sikuliPicture.";
+        /**
+         * Check if picture folder exists to store the picture
+         * If, not create it.
+         */
+        File dir = new File("picture");
+        
+        if (!dir.exists()) {
+        dir.mkdir();
+        } else  {
+        FileUtils.cleanDirectory(new File("picture"));
+        }
+        
+        String pictureName = new SimpleDateFormat("YYYY.MM.dd.HH.mm.ss.SSS").format(new Date())+".";
+        
+        
         PrintStream os = null;
         try {
             System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
@@ -68,15 +84,16 @@ public class ExecuteSikuliAction extends HttpServlet {
             long start_time = System.currentTimeMillis();
             long end_time = start_time + defaultWait;
             System.out.println(defaultWait);
-//            System.out.println(start + " INFO - Receiving picture [" 
-//                    + picture.substring(1, 100) + "...] and naming it sikuliPicture.png");
             byte[] data = Base64.decodeBase64(picture);
 
-            try (OutputStream stream = new FileOutputStream(pictureName + extension)) {
+            pictureName += extension;
+            String picturePath = "picture" + File.separator + pictureName;
+            
+            try (OutputStream stream = new FileOutputStream(picturePath)) {
                 stream.write(data);
             }
 
-            System.out.println(start + " INFO - Executing: [" + action + ": on picture ./" + pictureName + extension + "]");
+            System.out.println(start + " INFO - Executing: [" + action + ": on picture " + picturePath + "]");
 
             int actionResult = 0;
             SikuliAction sikuliAction = new SikuliAction();
@@ -84,7 +101,7 @@ public class ExecuteSikuliAction extends HttpServlet {
             boolean actionSuccess = false;
             while (System.currentTimeMillis() < end_time) {
                 try {
-                    actionResult = sikuliAction.doAction(action, pictureName + extension, text);
+                    actionResult = sikuliAction.doAction(action, picturePath, text);
                     if (actionResult == 1) {
                         actionSuccess = true;
                         break;
@@ -100,7 +117,7 @@ public class ExecuteSikuliAction extends HttpServlet {
             }
             if (!actionSuccess) {
                 System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
-                        + " INFO - Element Not Found : " + pictureName + extension);
+                        + " INFO - Element Not Found : " + picturePath);
                 os.println("Failed");
                 os.println("|ENDR|");
 
