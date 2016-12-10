@@ -8,6 +8,8 @@ package org.sikuliserver;
 import org.sikuli.script.FindFailed;
 import org.sikuli.script.Key;
 import org.sikuli.script.Screen;
+import org.sikuli.script.App;
+import org.sikuli.basics.Settings;
 
 /**
  *
@@ -20,6 +22,11 @@ public class SikuliAction {
         Screen s = new Screen();
 
         switch (action) {
+            case "openApp":
+                App app = new App(text);
+                app.open();
+                result=1;
+                break;
             case "click":
                 result = s.click(picture);
                 break;
@@ -55,6 +62,11 @@ public class SikuliAction {
                 break;
             case "verifyElementPresent":
                 s.exists(picture);
+                break;
+            case "verifyTextInPage":
+                Settings.OcrTextSearch = true;
+                Settings.OcrTextRead = true;
+                //result = find(text);
                 break;
             case "takeScreenshot":
                 s.capture(s.getBounds());
