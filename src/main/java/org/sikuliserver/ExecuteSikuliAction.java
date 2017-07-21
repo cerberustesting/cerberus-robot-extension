@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.sikuli.script.FindFailed;
@@ -29,6 +30,8 @@ import org.sikuli.script.FindFailed;
  * @author bcivel
  */
 public class ExecuteSikuliAction extends HttpServlet {
+
+    private static final Logger LOG = Logger.getLogger(ExecuteSikuliAction.class);
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -43,27 +46,30 @@ public class ExecuteSikuliAction extends HttpServlet {
             throws ServletException, IOException {
 
         /**
-         * Check if picture folder exists to store the picture
-         * If, not create it.
+         * Check if picture folder exists to store the picture. If not, create
+         * it.
          */
         File dir = new File("picture");
-        
+
         if (!dir.exists()) {
-        dir.mkdir();
-        } else  {
-        FileUtils.cleanDirectory(new File("picture"));
+            dir.mkdir();
+        } else {
+            FileUtils.cleanDirectory(new File("picture"));
         }
-        
-        String pictureName = new SimpleDateFormat("YYYY.MM.dd.HH.mm.ss.SSS").format(new Date())+".";
-        
-        
+
+        /**
+         *
+         */
         PrintStream os = null;
         try {
-            System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
-                    + " INFO - Received: [Request from " + request.getServerName() + "]");
+            LOG.info("Received: [Request from " + request.getServerName() + "]");
 
-            BufferedReader is = new BufferedReader(new InputStreamReader(
-                    request.getInputStream()));
+            /**
+             * Get input information until the syntax |ENDS| is received Input
+             * information expected is a JSON cast into String JSONObject
+             * contains action, picture, text, defaultWait, pictureExtension
+             */
+            BufferedReader is = new BufferedReader(new InputStreamReader(request.getInputStream()));
             os = new PrintStream(response.getOutputStream());
             String line = "";
 
@@ -72,8 +78,10 @@ public class ExecuteSikuliAction extends HttpServlet {
                 sb.append(line);
             }
 
+            /**
+             * Convert String into JSONObject
+             */
             JSONObject obj = new JSONObject(sb.toString());
-
             String action = obj.getString("action");
             String picture = obj.getString("picture");
             String text = obj.getString("text");
@@ -81,62 +89,77 @@ public class ExecuteSikuliAction extends HttpServlet {
             String extension = obj.getString("pictureExtension");
             String start = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
 
+            /**
+             * Init startTime and endTime for loop retry
+             */
             long start_time = System.currentTimeMillis();
             long end_time = start_time + defaultWait;
-            System.out.println(defaultWait);
-            byte[] data = Base64.decodeBase64(picture);
 
-            pictureName += extension;
-            String picturePath = "picture" + File.separator + pictureName;
-            
-            try (OutputStream stream = new FileOutputStream(picturePath)) {
-                stream.write(data);
+            /**
+             * Generate pictureName and Path if picture is not empty.
+             * PictureName is a timestamp to ensure new name for every action
+             */
+            String picturePath = "";
+            String logPictureInfo = "";
+            if (!"".equals(picture)) {
+                String pictureName = new SimpleDateFormat("YYYY.MM.dd.HH.mm.ss.SSS").format(new Date()) + ".";
+                pictureName += extension;
+                picturePath = "picture" + File.separator + pictureName;
+
+                /**
+                 * Decode picture and print it
+                 */
+                byte[] data = Base64.decodeBase64(picture);
+                try (OutputStream stream = new FileOutputStream(picturePath)) {
+                    stream.write(data);
+                }
+                //Update logPictureInfo with that info
+                logPictureInfo = ": on picture " + picturePath;
             }
 
-            System.out.println(start + " INFO - Executing: [" + action + ": on picture " + picturePath + "]");
+            LOG.info("Executing: [" + action + logPictureInfo + "]");
 
-            int actionResult = 0;
+            JSONObject actionResult = new JSONObject();
             SikuliAction sikuliAction = new SikuliAction();
-
             boolean actionSuccess = false;
+
+            /**
+             * Loop on action until success or timeout
+             */
             while (System.currentTimeMillis() < end_time) {
                 try {
                     actionResult = sikuliAction.doAction(action, picturePath, text);
-                    if (actionResult == 1) {
+                    /**
+                     * If action OK, break the loop. Else, log and try again
+                     * until timeout
+                     */
+                    if ("OK".equals(actionResult.get("status"))) {
                         actionSuccess = true;
                         break;
                     }
+
                 } catch (FindFailed ex) {
-                    System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
-                            + " INFO - Element Not Found : " + ex);
-                    System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
-                            + " INFO - Retrying again during " + (System.currentTimeMillis() - end_time) + "ms");
+                    LOG.info("Element Not Found yet: " + ex);
+                } finally {
+                    LOG.info("Retrying again during " + (System.currentTimeMillis() - end_time) + "ms");
                 }
-                System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
-                            + " INFO - "+action+": Still Waiting " + (System.currentTimeMillis() - end_time) + "ms");
             }
-            if (!actionSuccess) {
-                System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
-                        + " INFO - Element Not Found : " + picturePath);
-                os.println("Failed");
-                os.println("|ENDR|");
-
-            }
-
-            String end = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
-            System.out.println(end + " INFO - Done [" + action + "] with result:" + actionResult);
-            os.println(actionResult);
+            
+            /**
+             * Log and return actionResult
+             */
+            System.out.println(actionResult.get("status") + " [" + action + logPictureInfo + "] finish with result:" + actionResult.get("status"));
+            os.println(actionResult.toString());
             os.println("|ENDR|");
+            
         } catch (IOException e) {
-            System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
-                    + " IOException : " + e);
+            LOG.warn(" IOException : " + e);
             if (os != null) {
                 os.println("Failed");
                 os.println("|ENDR|");
             }
         } catch (JSONException ex) {
-            System.out.println(new SimpleDateFormat("HH:mm:ss.SSS").format(new Date())
-                    + " JSON Badly formated : " + ex);
+            LOG.warn(" JSON Badly formated : " + ex);
             if (os != null) {
                 os.println("Failed");
                 os.println("|ENDR|");
