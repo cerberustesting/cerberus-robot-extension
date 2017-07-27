@@ -70,96 +70,113 @@ public class ExecuteSikuliAction extends HttpServlet {
              * contains action, picture, text, defaultWait, pictureExtension
              */
             BufferedReader is = new BufferedReader(new InputStreamReader(request.getInputStream()));
-            os = new PrintStream(response.getOutputStream());
-            String line = "";
 
-            StringBuilder sb = new StringBuilder();
-            while (!(line = is.readLine()).equals("|ENDS|")) {
-                sb.append(line);
-            }
+            //continue if BufferReader is not null, 
+            //else, print message
+            if (is.ready()) {
 
-            /**
-             * Convert String into JSONObject
-             */
-            JSONObject obj = new JSONObject(sb.toString());
-            String action = obj.getString("action");
-            String picture = obj.getString("picture");
-            String text = obj.getString("text");
-            int defaultWait = obj.getInt("defaultWait");
-            String extension = obj.getString("pictureExtension");
-            String start = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
+                os = new PrintStream(response.getOutputStream());
+                String line = "";
 
-            /**
-             * Init startTime and endTime for loop retry
-             */
-            long start_time = System.currentTimeMillis();
-            long end_time = start_time + defaultWait;
-
-            /**
-             * Generate pictureName and Path if picture is not empty.
-             * PictureName is a timestamp to ensure new name for every action
-             */
-            String picturePath = "";
-            String logPictureInfo = "";
-            if (!"".equals(picture)) {
-                String pictureName = new SimpleDateFormat("YYYY.MM.dd.HH.mm.ss.SSS").format(new Date()) + ".";
-                pictureName += extension;
-                picturePath = "picture" + File.separator + pictureName;
+                StringBuilder sb = new StringBuilder();
+                while (!(line = is.readLine()).equals("|ENDS|")) {
+                    sb.append(line);
+                }
 
                 /**
-                 * Decode picture and print it
+                 * Convert String into JSONObject
                  */
-                byte[] data = Base64.decodeBase64(picture);
-                try (OutputStream stream = new FileOutputStream(picturePath)) {
-                    stream.write(data);
-                }
-                //Update logPictureInfo with that info
-                logPictureInfo = ": on picture " + picturePath;
-            }
+                LOG.debug("InputStream : " + sb.toString());
 
-            LOG.info("Executing: [" + action + logPictureInfo + "]");
+                JSONObject obj = new JSONObject(sb.toString());
+                String action = obj.getString("action");
+                String picture = obj.getString("picture");
+                String text = obj.getString("text");
+                int defaultWait = obj.getInt("defaultWait");
+                String extension = obj.getString("pictureExtension");
+                String start = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
 
-            JSONObject actionResult = new JSONObject();
-            SikuliAction sikuliAction = new SikuliAction();
-            boolean actionSuccess = false;
+                /**
+                 * Init startTime and endTime for loop retry
+                 */
+                long start_time = System.currentTimeMillis();
+                long end_time = start_time + defaultWait;
 
-            /**
-             * Loop on action until success or timeout
-             */
-            while (System.currentTimeMillis() < end_time) {
-                try {
-                    actionResult = sikuliAction.doAction(action, picturePath, text);
+                /**
+                 * Generate pictureName and Path if picture is not empty.
+                 * PictureName is a timestamp to ensure new name for every
+                 * action
+                 */
+                String picturePath = "";
+                String logPictureInfo = "";
+                if (!"".equals(picture)) {
+                    String pictureName = new SimpleDateFormat("YYYY.MM.dd.HH.mm.ss.SSS").format(new Date()) + ".";
+                    pictureName += extension;
+                    picturePath = "picture" + File.separator + pictureName;
+
                     /**
-                     * If action OK, break the loop. Else, log and try again
-                     * until timeout
+                     * Decode picture and print it
                      */
-                    if ("OK".equals(actionResult.get("status"))) {
-                        actionSuccess = true;
-                        break;
+                    byte[] data = Base64.decodeBase64(picture);
+                    try (OutputStream stream = new FileOutputStream(picturePath)) {
+                        stream.write(data);
                     }
-
-                } catch (FindFailed ex) {
-                    LOG.info("Element Not Found yet: " + ex);
-                } finally {
-                    LOG.info("Retrying again during " + (System.currentTimeMillis() - end_time) + "ms");
+                    //Update logPictureInfo with that info
+                    logPictureInfo = ": on picture " + picturePath;
                 }
+
+                LOG.info("Executing: [" + action + logPictureInfo + "]");
+
+                JSONObject actionResult = new JSONObject();
+                actionResult.put("status", "Failed");
+                SikuliAction sikuliAction = new SikuliAction();
+                boolean actionSuccess = false;
+
+                /**
+                 * Loop on action until success or timeout
+                 */
+                while (System.currentTimeMillis() < end_time) {
+                    try {
+                        actionResult = sikuliAction.doAction(action, picturePath, text);
+                        /**
+                         * If action OK, break the loop. Else, log and try again
+                         * until timeout
+                         */
+                        if (actionResult.has("status")) {
+                            if ("OK".equals(actionResult.get("status"))) {
+                                actionSuccess = true;
+                                break;
+                            }
+                        }
+
+                    } catch (FindFailed ex) {
+                        LOG.debug("Element Not Found yet: " + ex);
+                        LOG.info("Retrying again during " + (System.currentTimeMillis() - end_time) + " ms");
+                    }
+                }
+
+                /**
+                 * Log and return actionResult
+                 */
+                LOG.info(actionResult.get("status") + " [" + action + logPictureInfo + "] finish with result:" + actionResult.get("status"));
+                os.println(actionResult.toString());
+                os.println("|ENDR|");
+
+            } else {
+                LOG.info("ExecuteSikuliAction is up and running. Waiting stuff from Cerberus");
+                response.getWriter().print("ExecuteSikuliAction is up and running. Waiting stuff from Cerberus");
             }
-            
-            /**
-             * Log and return actionResult
-             */
-            System.out.println(actionResult.get("status") + " [" + action + logPictureInfo + "] finish with result:" + actionResult.get("status"));
-            os.println(actionResult.toString());
-            os.println("|ENDR|");
-            
+
+            //is.close();
+            //os.close();
         } catch (IOException e) {
-            LOG.warn(" IOException : " + e);
+            LOG.warn("IOException : " + e);
             if (os != null) {
                 os.println("Failed");
                 os.println("|ENDR|");
             }
         } catch (JSONException ex) {
-            LOG.warn(" JSON Badly formated : " + ex);
+            LOG.warn("JSON Exception : " + ex);
             if (os != null) {
                 os.println("Failed");
                 os.println("|ENDR|");
