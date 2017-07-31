@@ -13,7 +13,14 @@ To use it, you will need to:
 > 4 - Create a .bat/.sh file with the following command
 
 - for a standalone mode (For Fat client only)
-`start /b java -jar cerberus-extension-sikuli-x.x.x-full.jar`
+`
+start /b java -jar cerberus-extension-sikuli-x.x.x-full.jar
+Optional arguments :
+-d (--debug)
+-h (--highlightElement) Integer : NumberOfSeconds
+-p (--port) Integer : Port
+`
+
 
 - for hybrid testing (Web with some screen recognition needs)
 `start /b java -jar selenium-server-standalone-x.xx.x.jar -role hub -port 5555
