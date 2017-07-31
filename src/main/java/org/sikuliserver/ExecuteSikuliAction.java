@@ -20,7 +20,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.sikuli.script.FindFailed;
@@ -31,7 +32,7 @@ import org.sikuli.script.FindFailed;
  */
 public class ExecuteSikuliAction extends HttpServlet {
 
-    private static final Logger LOG = Logger.getLogger(ExecuteSikuliAction.class);
+    private static final Logger LOG = LogManager.getLogger(ExecuteSikuliAction.class);
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -69,6 +70,7 @@ public class ExecuteSikuliAction extends HttpServlet {
              * information expected is a JSON cast into String JSONObject
              * contains action, picture, text, defaultWait, pictureExtension
              */
+            LOG.debug("Trying to open InputStream");
             BufferedReader is = new BufferedReader(new InputStreamReader(request.getInputStream()));
 
             //continue if BufferReader is not null, 
@@ -78,6 +80,7 @@ public class ExecuteSikuliAction extends HttpServlet {
                 os = new PrintStream(response.getOutputStream());
                 String line = "";
 
+                LOG.debug("Start reading InputStream");
                 StringBuilder sb = new StringBuilder();
                 while (!(line = is.readLine()).equals("|ENDS|")) {
                     sb.append(line);
