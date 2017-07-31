@@ -47,9 +47,13 @@ public class QueueReceiver {
             debug.setRequired(false);
             options.addOption(debug);
             
-            Option highlight = new Option("h", "highlightElement", true, "highlightElement");
+            Option highlight = new Option("e", "highlightElement", true, "highlightElement");
             highlight.setRequired(false);
             options.addOption(highlight);
+            
+            Option help = new Option("h", "help", false, "help");
+            help.setRequired(false);
+            options.addOption(help);
 
             CommandLineParser parser = new DefaultParser();
             HelpFormatter formatter = new HelpFormatter();
@@ -84,6 +88,16 @@ public class QueueReceiver {
              */
             if (cmd.hasOption("highlightElement")){
                 System.setProperty("highlightElement", cmd.getOptionValue("highlightElement"));
+                LOG.info("Set HighlightElement parameter to " +cmd.getOptionValue("highlightElement") + " seconds");
+            }
+
+            /**
+             * Display help if -h present
+             */
+            if (cmd.hasOption("help")){
+                formatter.printHelp("utility-name", options);
+                System.exit(1);
+                return;
             }
 
             
