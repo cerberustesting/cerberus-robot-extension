@@ -272,6 +272,11 @@ public class SikuliAction {
                             status = "OK";
                         }
                         break;
+                    case "notExists":
+                        if (s.exists(picture) == null) {
+                            status = "OK";
+                        }
+                        break;
                     //DEPRECATED >> Replaced by findText
                     //To Remove after Cerberus Release
                     case "verifyTextInPage":

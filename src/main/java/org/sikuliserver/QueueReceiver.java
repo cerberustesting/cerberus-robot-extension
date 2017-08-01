@@ -39,19 +39,19 @@ public class QueueReceiver {
              */
             Options options = new Options();
 
-            Option port = new Option("p", "port", true, "port");
+            Option port = new Option("p", "port", true, "Start the server on this [INTEGER] <port>");
             port.setRequired(false);
             options.addOption(port);
 
-            Option debug = new Option("d", "debug", false, "debug");
+            Option debug = new Option("d", "debug", false, "Start the server in debug mode");
             debug.setRequired(false);
             options.addOption(debug);
             
-            Option highlight = new Option("e", "highlightElement", true, "highlightElement");
+            Option highlight = new Option("e", "highlightElement", true, "Highlight focussed element during this [INTEGER] <number of seconds>");
             highlight.setRequired(false);
             options.addOption(highlight);
             
-            Option help = new Option("h", "help", false, "help");
+            Option help = new Option("h", "help", false, "Display the help message");
             help.setRequired(false);
             options.addOption(help);
 

@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileDeleteStrategy;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,7 +56,8 @@ public class ExecuteSikuliAction extends HttpServlet {
         if (!dir.exists()) {
             dir.mkdir();
         } else {
-            FileUtils.cleanDirectory(new File("picture"));
+            FileDeleteStrategy.FORCE.delete(dir);
+            dir.mkdir();
         }
 
         /**
@@ -184,6 +186,8 @@ public class ExecuteSikuliAction extends HttpServlet {
                 os.println("Failed");
                 os.println("|ENDR|");
             }
+        } finally {
+            FileDeleteStrategy.FORCE.delete(dir);
         }
     }
 
