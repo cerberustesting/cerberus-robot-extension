@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
@@ -29,16 +30,15 @@ import org.sikuli.script.ScreenImage;
  * @author bcivel
  */
 public class SikuliAction {
-    
+
     private static final Logger LOG = LogManager.getLogger(SikuliAction.class);
-    
+
     JSONObject doAction(String action, String picture, String text) throws FindFailed {
         JSONObject result = new JSONObject();
-        
+
         boolean highlightElement = false;
         int numberOfSeconds = 2;
-        
-        
+
         if (System.getProperty("highlightElement") != null) {
             highlightElement = true;
             try {
@@ -48,9 +48,9 @@ public class SikuliAction {
                 LOG.warn("Exception parsing highlightElement argument : " + ex);
                 LOG.warn("Set highlightElement to its default value : 2 seconds");
             }
-            
+
         }
-        
+
         try {
             /**
              * Result Object init with result KO
@@ -301,7 +301,7 @@ public class SikuliAction {
                         result.put("screenshot", screenshotInBase64);
                         break;
                 }
-                
+
             } catch (Exception ex) {
                 LOG.warn(ex);
             } finally {
@@ -313,10 +313,11 @@ public class SikuliAction {
         }
         return result;
     }
-    
+
     public String getScreenshotInBase64() {
         String picture = "";
         String screenshotPath = "picture" + File.separator + "Screenshot.png";
+        InputStream istream = null;
         try {
             Screen s = new Screen();
             ScreenImage screenshot = s.capture(s.getBounds());
@@ -325,16 +326,24 @@ public class SikuliAction {
             /**
              * Get Picture from URL and convert to Base64
              */
-            InputStream istream = new FileInputStream(new File(screenshotPath));
+            istream = new FileInputStream(new File(screenshotPath));
 
             /**
              * Encode in Base64
              */
             byte[] bytes = IOUtils.toByteArray(istream);
             picture = Base64.encodeBase64URLSafeString(bytes);
-            
+
         } catch (IOException ex) {
             LOG.warn(ex);
+        } finally {
+            if (istream != null) {
+                try {
+                    istream.close();
+                } catch (IOException ex) {
+                    LOG.warn(ex);
+                }
+            }
         }
         return picture;
     }

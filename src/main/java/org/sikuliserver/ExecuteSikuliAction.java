@@ -166,14 +166,16 @@ public class ExecuteSikuliAction extends HttpServlet {
                 LOG.info(actionResult.get("status") + " [" + action + logPictureInfo + "] finish with result:" + actionResult.get("status"));
                 os.println(actionResult.toString());
                 os.println("|ENDR|");
+                
+                is.close();
+                os.close();
 
             } else {
                 LOG.info("ExecuteSikuliAction is up and running. Waiting stuff from Cerberus");
                 response.getWriter().print("ExecuteSikuliAction is up and running. Waiting stuff from Cerberus");
             }
 
-            //is.close();
-            //os.close();
+            
         } catch (IOException e) {
             LOG.warn("IOException : " + e);
             if (os != null) {
