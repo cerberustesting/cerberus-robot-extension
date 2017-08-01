@@ -17,8 +17,9 @@ To use it, you will need to:
 start /b java -jar cerberus-extension-sikuli-x.x.x-full.jar
 Optional arguments :
 -d (--debug)
--h (--highlightElement) Integer : NumberOfSeconds
+-e (--highlightElement) Integer : NumberOfSeconds
 -p (--port) Integer : Port
+-h (--help)
 `
 
 
