@@ -22,6 +22,7 @@ import org.sikuli.script.Key;
 import org.sikuli.script.Screen;
 import org.sikuli.script.App;
 import org.sikuli.basics.Settings;
+import org.sikuli.script.Env;
 import org.sikuli.script.Region;
 import org.sikuli.script.ScreenImage;
 
@@ -75,50 +76,120 @@ public class SikuliAction {
                         status = "OK";
                         break;
                     case "click":
-                        if (highlightElement) {
-                            s.find(picture).highlight(numberOfSeconds);
-                        }
-                        if (1 == s.click(picture)) {
-                            status = "OK";
+                        if ("".equals(picture)) {
+                            Settings.OcrTextSearch = true;
+                            Settings.OcrTextRead = true;
+                            if (highlightElement) {
+                                s.find(text).highlight(numberOfSeconds);
+                            }
+
+                            if (1 == s.find(text).click()) {
+                                status = "OK";
+                            }
+                        } else {
+                            if (highlightElement) {
+                                s.find(picture).highlight(numberOfSeconds);
+                            }
+                            if (1 == s.click(picture)) {
+                                status = "OK";
+                            }
                         }
                         break;
                     case "doubleClick":
-                        if (highlightElement) {
-                            s.find(picture).highlight(numberOfSeconds);
-                        }
-                        if (1 == s.doubleClick(picture)) {
-                            status = "OK";
+                        if ("".equals(picture)) {
+                            Settings.OcrTextSearch = true;
+                            Settings.OcrTextRead = true;
+                            if (highlightElement) {
+                                s.find(text).highlight(numberOfSeconds);
+                            }
+
+                            if (1 == s.find(text).doubleClick()) {
+                                status = "OK";
+                            }
+                        } else {
+                            if (highlightElement) {
+                                s.find(picture).highlight(numberOfSeconds);
+                            }
+                            if (1 == s.doubleClick(picture)) {
+                                status = "OK";
+                            }
                         }
                         break;
                     case "rightClick":
-                        if (highlightElement) {
-                            s.find(picture).highlight(numberOfSeconds);
-                        }
-                        if (1 == s.rightClick(picture)) {
-                            status = "OK";
+                        if ("".equals(picture)) {
+                            Settings.OcrTextSearch = true;
+                            Settings.OcrTextRead = true;
+                            if (highlightElement) {
+                                s.find(text).highlight(numberOfSeconds);
+                            }
+
+                            if (1 == s.find(text).rightClick()) {
+                                status = "OK";
+                            }
+                        } else {
+                            if (highlightElement) {
+                                s.find(picture).highlight(numberOfSeconds);
+                            }
+                            if (1 == s.rightClick(picture)) {
+                                status = "OK";
+                            }
                         }
                         break;
                     case "mouseOver":
-                        if (highlightElement) {
-                            s.find(picture).highlight(numberOfSeconds);
-                        }
-                        if (1 == s.hover(picture)) {
-                            status = "OK";
+                        if ("".equals(picture)) {
+                            Settings.OcrTextSearch = true;
+                            Settings.OcrTextRead = true;
+                            if (highlightElement) {
+                                s.find(text).highlight(numberOfSeconds);
+                            }
+
+                            if (1 == s.find(text).hover()) {
+                                status = "OK";
+                            }
+                        } else {
+                            if (highlightElement) {
+                                s.find(picture).highlight(numberOfSeconds);
+                            }
+                            if (1 == s.hover(picture)) {
+                                status = "OK";
+                            }
                         }
                         break;
                     case "wait":
-                        if (highlightElement) {
-                            s.find(picture).highlight(numberOfSeconds);
+                        if ("".equals(picture)) {
+                            Settings.OcrTextSearch = true;
+                            Settings.OcrTextRead = true;
+                            if (highlightElement) {
+                                s.find(text).highlight(numberOfSeconds);
+                            }
+
+                            s.wait(text);
+                            status = "OK";
+                        } else {
+                            if (highlightElement) {
+                                s.find(picture).highlight(numberOfSeconds);
+                            }
+                            s.wait(picture);
+                            status = "OK";
                         }
-                        s.wait(picture);
-                        status = "OK";
                         break;
                     case "waitVanish":
-                        if (highlightElement) {
-                            s.find(picture).highlight(numberOfSeconds);
+                        if ("".equals(picture)) {
+                            Settings.OcrTextSearch = true;
+                            Settings.OcrTextRead = true;
+                            if (highlightElement) {
+                                s.find(text).highlight(numberOfSeconds);
+                            }
+
+                            s.waitVanish(text);
+                            status = "OK";
+                        } else {
+                            if (highlightElement) {
+                                s.find(picture).highlight(numberOfSeconds);
+                            }
+                            s.waitVanish(picture);
+                            status = "OK";
                         }
-                        s.waitVanish(picture);
-                        status = "OK";
                         break;
                     case "paste":
                         //If picture is defined, click on it before pasting the text
@@ -254,16 +325,6 @@ public class SikuliAction {
                         }
                         ;
                         break;
-                    //DEPRECATED >> Replaced by exists
-                    //To Remove after Cerberus Release
-                    case "verifyElementPresent":
-                        if (highlightElement) {
-                            s.find(picture).highlight(numberOfSeconds);
-                        }
-                        if (s.exists(picture) != null) {
-                            status = "OK";
-                        }
-                        break;
                     case "exists":
                         if (highlightElement) {
                             s.find(picture).highlight(numberOfSeconds);
@@ -277,21 +338,14 @@ public class SikuliAction {
                             status = "OK";
                         }
                         break;
-                    //DEPRECATED >> Replaced by findText
-                    //To Remove after Cerberus Release
-                    case "verifyTextInPage":
-                        Settings.OcrTextSearch = true;
-                        Settings.OcrTextRead = true;
-                        if (s.findText(text) != null) {
-                            status = "OK";
-                        }
-                        break;
                     case "findText":
                         Settings.OcrTextSearch = true;
                         Settings.OcrTextRead = true;
-                        LOG.warn("find text");
-                        Region r = new Region(s.x, s.y, s.w, s.h);
-                        if (r.findText(text) != null) {
+                        //Region r = new Region(s.x, s.y, s.w, s.h);
+                        if (highlightElement) {
+                            s.find(text).highlight(numberOfSeconds);
+                        }
+                        if (s.find(text) != null) {
                             status = "OK";
                         }
                         break;
