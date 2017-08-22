@@ -319,6 +319,36 @@ public class SikuliAction {
                                     res = s.type(Key.UP);
                                 }
                                 break;
+                            case "Key.END":
+                                if (!"".equals(picture)) {
+                                    if (highlightElement) {
+                                        s.find(picture).highlight(numberOfSeconds);
+                                    }
+                                    res = s.type(picture, Key.END);
+                                } else {
+                                    res = s.type(Key.END);
+                                }
+                                break;
+                            case "Key.PAGE_DOWN":
+                                if (!"".equals(picture)) {
+                                    if (highlightElement) {
+                                        s.find(picture).highlight(numberOfSeconds);
+                                    }
+                                    res = s.type(picture, Key.PAGE_DOWN);
+                                } else {
+                                    res = s.type(Key.PAGE_DOWN);
+                                }
+                                break;
+                            case "Key.PAGE_UP":
+                                if (!"".equals(picture)) {
+                                    if (highlightElement) {
+                                        s.find(picture).highlight(numberOfSeconds);
+                                    }
+                                    res = s.type(picture, Key.PAGE_UP);
+                                } else {
+                                    res = s.type(Key.PAGE_UP);
+                                }
+                                break;                                
                         }
                         if (1 == res) {
                             status = "OK";
