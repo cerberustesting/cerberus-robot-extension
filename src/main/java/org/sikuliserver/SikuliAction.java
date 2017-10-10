@@ -348,7 +348,27 @@ public class SikuliAction {
                                 } else {
                                     res = s.type(Key.PAGE_UP);
                                 }
-                                break;                                
+                                break;
+                            case "Key.F7":
+                                if (!"".equals(picture)) {
+                                    if (highlightElement) {
+                                        s.find(picture).highlight(numberOfSeconds);
+                                    }
+                                    res = s.type(picture, Key.F7);
+                                } else {
+                                    res = s.type(Key.F7);
+                                }
+                                break;
+                            case "Key.F8":
+                                if (!"".equals(picture)) {
+                                    if (highlightElement) {
+                                        s.find(picture).highlight(numberOfSeconds);
+                                    }
+                                    res = s.type(picture, Key.F8);
+                                } else {
+                                    res = s.type(Key.F8);
+                                }
+                                break;
                         }
                         if (1 == res) {
                             status = "OK";
