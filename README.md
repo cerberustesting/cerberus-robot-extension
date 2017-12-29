@@ -4,7 +4,7 @@ This project allow to use Cerberus (https://github.com/cerberustesting/cerberus-
 
 To use it, you will need to:
 
-> 1 - Install sikuli on servers where the script will be executed (following instruction here : http://sikulix-2014.readthedocs.org/en/latest/index.html).
+> 1 - Install sikuli on servers where the script will be executed (following instruction here : http://sikulix-2014.readthedocs.org/en/latest/index.html   Installation package here : https://launchpad.net/sikuli/sikulix).
 
 > 2 - Download Selenium Standalone Server (http://www.seleniumhq.org/download).
 
