@@ -46,11 +46,11 @@ public class QueueReceiver {
             Option debug = new Option("d", "debug", false, "Start the server in debug mode");
             debug.setRequired(false);
             options.addOption(debug);
-            
+
             Option highlight = new Option("e", "highlightElement", true, "Highlight focussed element during this [INTEGER] <number of seconds>");
             highlight.setRequired(false);
             options.addOption(highlight);
-            
+
             Option help = new Option("h", "help", false, "Display the help message");
             help.setRequired(false);
             options.addOption(help);
@@ -73,38 +73,38 @@ public class QueueReceiver {
              * Change port if specified
              */
             String portParam = "5555";
-            if (cmd.hasOption("port")){
-            portParam = cmd.getOptionValue("port");
-            } 
-            
+            if (cmd.hasOption("port")) {
+                portParam = cmd.getOptionValue("port");
+            }
+
             /**
              * Set DebugMode if specified
              */
-            if (cmd.hasOption("debug")){
+            if (cmd.hasOption("debug")) {
+                LOG.info("Activating Debug Mode.");
                 setLogLevelToDebug();
             }
             /**
              * Set Highlight Element if specified
              */
-            if (cmd.hasOption("highlightElement")){
+            if (cmd.hasOption("highlightElement")) {
                 System.setProperty("highlightElement", cmd.getOptionValue("highlightElement"));
-                LOG.info("Set HighlightElement parameter to " +cmd.getOptionValue("highlightElement") + " seconds");
+                LOG.info("Set HighlightElement parameter to " + cmd.getOptionValue("highlightElement") + " seconds");
             }
 
             /**
              * Display help if -h present
              */
-            if (cmd.hasOption("help")){
+            if (cmd.hasOption("help")) {
                 formatter.printHelp("utility-name", options);
                 System.exit(1);
                 return;
             }
 
-            
             /*
              * Start the server
              */
-            LOG.info("Launching a HttpServer on port : " + port);
+            LOG.info("Cerberus Extension Sikuli 1.1.7 - Http Server Launching on port : " + portParam);
             Server server = new Server();
 
             ServerConnector connector = new ServerConnector(server);
@@ -115,6 +115,7 @@ public class QueueReceiver {
 
             server.setHandler(servletHandler);
             servletHandler.addServletWithMapping(ExecuteSikuliAction.class, "/extra/ExecuteSikuliAction");
+            LOG.info("Servlet listening on : /extra/ExecuteSikuliAction");
 
             server.start();
             server.join();

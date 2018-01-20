@@ -66,11 +66,13 @@ public class SikuliAction {
             try {
                 switch (action) {
                     case "openApp":
+                        LOG.info("Opening Application : " + text);
                         App app = new App(text);
                         app.open();
                         status = "OK";
                         break;
                     case "closeApp":
+                        LOG.info("Closing Application : " + text);
                         App openApp = new App(text);
                         openApp.close();
                         status = "OK";
