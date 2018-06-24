@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
@@ -22,8 +21,6 @@ import org.sikuli.script.Key;
 import org.sikuli.script.Screen;
 import org.sikuli.script.App;
 import org.sikuli.basics.Settings;
-import org.sikuli.script.Env;
-import org.sikuli.script.Region;
 import org.sikuli.script.ScreenImage;
 
 /**
@@ -194,7 +191,7 @@ public class SikuliAction {
                         }
                         break;
                     case "paste":
-                        //If picture is defined, click on it before pasting the text
+                        // If picture is defined, click on it before pasting the text
                         if (!"".equals(picture)) {
                             if (highlightElement) {
                                 s.find(picture).highlight(numberOfSeconds);
@@ -211,171 +208,199 @@ public class SikuliAction {
                     case "type":
                         int res = 0;
                         switch (text) {
-                            case "Key.TAB":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.TAB);
-                                } else {
-                                    res = s.type(Key.TAB);
-                                }
-                                break;
-                            case "Key.SHIFT":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.SHIFT);
-                                } else {
-                                    res = s.type(Key.SHIFT);
-                                }
-                                break;
-                            case "Key.DELETE":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.DELETE);
-                                } else {
-                                    res = s.type(Key.DELETE);
-                                }
+                            case "Key.SPACE":
+                            case " ":
+                                res = type(s, picture, Key.SPACE, numberOfSeconds, highlightElement);
                                 break;
                             case "Key.ENTER":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.ENTER);
-                                } else {
-                                    res = s.type(Key.ENTER);
-                                }
-                                break;
-                            case "Key.ESC":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.ESC);
-                                } else {
-                                    res = s.type(Key.ESC);
-                                }
+                                res = type(s, picture, Key.ENTER, numberOfSeconds, highlightElement);
                                 break;
                             case "Key.BACKSPACE":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.BACKSPACE);
-                                } else {
-                                    res = s.type(Key.BACKSPACE);
-                                }
+                                res = type(s, picture, Key.BACKSPACE, numberOfSeconds, highlightElement);
                                 break;
-                            case "Key.INSERT":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.INSERT);
-                                } else {
-                                    res = s.type(Key.INSERT);
-                                }
+                            case "Key.TAB":
+                                res = type(s, picture, Key.TAB, numberOfSeconds, highlightElement);
+//                                if (!"".equals(picture)) {
+//                                    if (highlightElement) {
+//                                        s.find(picture).highlight(numberOfSeconds);
+//                                    }
+//                                    res = s.type(picture, Key.TAB);
+//                                } else {
+//                                    res = s.type(Key.TAB);
+//                                }
                                 break;
-                            case "Key.LEFT":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.LEFT);
-                                } else {
-                                    res = s.type(Key.LEFT);
-                                }
-                                break;
-                            case "Key.RIGHT":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.RIGHT);
-                                } else {
-                                    res = s.type(Key.RIGHT);
-                                }
-                                break;
-                            case "Key.DOWN":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.DOWN);
-                                } else {
-                                    res = s.type(Key.DOWN);
-                                }
+                            case "Key.ESC":
+                                res = type(s, picture, Key.ESC, numberOfSeconds, highlightElement);
                                 break;
                             case "Key.UP":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.UP);
-                                } else {
-                                    res = s.type(Key.UP);
-                                }
+                                res = type(s, picture, Key.UP, numberOfSeconds, highlightElement);
                                 break;
-                            case "Key.END":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.END);
-                                } else {
-                                    res = s.type(Key.END);
-                                }
+                            case "Key.RIGHT":
+                                res = type(s, picture, Key.RIGHT, numberOfSeconds, highlightElement);
                                 break;
-                            case "Key.PAGE_DOWN":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.PAGE_DOWN);
-                                } else {
-                                    res = s.type(Key.PAGE_DOWN);
-                                }
+                            case "Key.DOWN":
+                                res = type(s, picture, Key.DOWN, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.LEFT":
+                                res = type(s, picture, Key.LEFT, numberOfSeconds, highlightElement);
                                 break;
                             case "Key.PAGE_UP":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.PAGE_UP);
-                                } else {
-                                    res = s.type(Key.PAGE_UP);
-                                }
+                                res = type(s, picture, Key.PAGE_UP, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.PAGE_DOWN":
+                                res = type(s, picture, Key.PAGE_DOWN, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.DELETE":
+                                res = type(s, picture, Key.DELETE, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.END":
+                                res = type(s, picture, Key.END, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.HOME":
+                                res = type(s, picture, Key.HOME, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.INSERT":
+                                res = type(s, picture, Key.INSERT, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F1":
+                                res = type(s, picture, Key.F1, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F2":
+                                res = type(s, picture, Key.F2, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F3":
+                                res = type(s, picture, Key.F3, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F4":
+                                res = type(s, picture, Key.F4, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F5":
+                                res = type(s, picture, Key.F5, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F6":
+                                res = type(s, picture, Key.F6, numberOfSeconds, highlightElement);
                                 break;
                             case "Key.F7":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.F7);
-                                } else {
-                                    res = s.type(Key.F7);
-                                }
+                                res = type(s, picture, Key.F7, numberOfSeconds, highlightElement);
                                 break;
                             case "Key.F8":
-                                if (!"".equals(picture)) {
-                                    if (highlightElement) {
-                                        s.find(picture).highlight(numberOfSeconds);
-                                    }
-                                    res = s.type(picture, Key.F8);
-                                } else {
-                                    res = s.type(Key.F8);
-                                }
+                                res = type(s, picture, Key.F8, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F9":
+                                res = type(s, picture, Key.F9, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F10":
+                                res = type(s, picture, Key.F10, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F11":
+                                res = type(s, picture, Key.F11, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F12":
+                                res = type(s, picture, Key.F12, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F13":
+                                res = type(s, picture, Key.F13, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F14":
+                                res = type(s, picture, Key.F14, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.F15":
+                                res = type(s, picture, Key.F15, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.SHIFT":
+                                res = type(s, picture, Key.SHIFT, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.CTRL":
+                                res = type(s, picture, Key.CTRL, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.ALT":
+                                res = type(s, picture, Key.ALT, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.ALTGR":
+                                res = type(s, picture, Key.ALTGR, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.META":
+                                res = type(s, picture, Key.META, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.CMD":
+                                res = type(s, picture, Key.CMD, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.WIN":
+                                res = type(s, picture, Key.WIN, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.PRINTSCREEN":
+                                res = type(s, picture, Key.PRINTSCREEN, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.SCROLL_LOCK":
+                                res = type(s, picture, Key.SCROLL_LOCK, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.PAUSE":
+                                res = type(s, picture, Key.PAUSE, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.CAPS_LOCK":
+                                res = type(s, picture, Key.CAPS_LOCK, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM0":
+                                res = type(s, picture, Key.NUM0, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM1":
+                                res = type(s, picture, Key.NUM1, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM2":
+                                res = type(s, picture, Key.NUM2, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM3":
+                                res = type(s, picture, Key.NUM3, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM4":
+                                res = type(s, picture, Key.NUM4, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM5":
+                                res = type(s, picture, Key.NUM5, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM6":
+                                res = type(s, picture, Key.NUM6, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM7":
+                                res = type(s, picture, Key.NUM7, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM8":
+                                res = type(s, picture, Key.NUM8, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM9":
+                                res = type(s, picture, Key.NUM9, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.SEPARATOR":
+                                res = type(s, picture, Key.SEPARATOR, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NUM_LOCK":
+                                res = type(s, picture, Key.NUM_LOCK, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.ADD":
+                                res = type(s, picture, Key.ADD, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.MINUS":
+                                res = type(s, picture, Key.MINUS, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.MULTIPLY":
+                                res = type(s, picture, Key.MULTIPLY, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.DIVIDE":
+                                res = type(s, picture, Key.DIVIDE, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.DECIMAL":
+                                res = type(s, picture, Key.DECIMAL, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.CONTEXT":
+                                res = type(s, picture, Key.CONTEXT, numberOfSeconds, highlightElement);
+                                break;
+                            case "Key.NEXT":
+                                res = type(s, picture, Key.NEXT, numberOfSeconds, highlightElement);
                                 break;
                         }
                         if (1 == res) {
                             status = "OK";
                         }
-                        ;
                         break;
                     case "exists":
                         if (highlightElement) {
@@ -418,6 +443,20 @@ public class SikuliAction {
             LOG.warn(ex);
         }
         return result;
+    }
+
+    private int type(Screen s, String picture, String text, int numberOfSeconds, boolean highlightElement) throws FindFailed {
+        int result = 0;
+        if (!"".equals(picture)) {
+            if (highlightElement) {
+                s.find(picture).highlight(numberOfSeconds);
+            }
+            result = s.type(picture, text);
+        } else {
+            result = s.type(text);
+        }
+        return result;
+
     }
 
     public String getScreenshotInBase64() {
