@@ -31,7 +31,7 @@ public class SikuliAction {
 
     private static final Logger LOG = LogManager.getLogger(SikuliAction.class);
 
-    JSONObject doAction(String action, String picture, String text) throws FindFailed {
+    JSONObject doAction(String action, String picture, String text, String minSimilarity) throws FindFailed {
         JSONObject result = new JSONObject();
 
         boolean highlightElement = false;
@@ -55,6 +55,11 @@ public class SikuliAction {
              */
             String status = "Failed";
             Screen s = new Screen();
+
+            if (minSimilarity != null) {
+                LOG.debug("Setting MinSimilarity to : " + minSimilarity);
+                Settings.MinSimilarity = Double.parseDouble(minSimilarity);
+            }
 
             /**
              * Switch on Action. Do the action. If no exception raised, or
@@ -220,14 +225,6 @@ public class SikuliAction {
                                 break;
                             case "Key.TAB":
                                 res = type(s, picture, Key.TAB, numberOfSeconds, highlightElement);
-//                                if (!"".equals(picture)) {
-//                                    if (highlightElement) {
-//                                        s.find(picture).highlight(numberOfSeconds);
-//                                    }
-//                                    res = s.type(picture, Key.TAB);
-//                                } else {
-//                                    res = s.type(Key.TAB);
-//                                }
                                 break;
                             case "Key.ESC":
                                 res = type(s, picture, Key.ESC, numberOfSeconds, highlightElement);

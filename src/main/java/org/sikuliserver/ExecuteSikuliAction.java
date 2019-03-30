@@ -99,6 +99,7 @@ public class ExecuteSikuliAction extends HttpServlet {
                 int defaultWait = obj.getInt("defaultWait");
                 String extension = obj.getString("pictureExtension");
                 String start = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
+                String minSimilarity = obj.getString("minSimilarity");
 
                 /**
                  * Init startTime and endTime for loop retry
@@ -141,7 +142,7 @@ public class ExecuteSikuliAction extends HttpServlet {
                  */
                 while (System.currentTimeMillis() < end_time) {
                     try {
-                        actionResult = sikuliAction.doAction(action, picturePath, text);
+                        actionResult = sikuliAction.doAction(action, picturePath, text, minSimilarity);
                         /**
                          * If action OK, break the loop. Else, log and try again
                          * until timeout
