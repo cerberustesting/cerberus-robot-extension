@@ -13,25 +13,26 @@ This project allow to use Cerberus (https://github.com/cerberustesting/cerberus-
 > 4 - Create a .bat/.sh file with the following command
 
 - For a standalone mode (Testing FAT application only)
-Windows:
+
+_Windows:_
 
       start /b java -jar cerberus-extension-sikuli-x.x.x.jar -p 5555
 
 
-Linux/Mac:
+_Linux/Mac:_
 
       java -jar ./cerberus-extension-sikuli-x.x.x.jar -p 5555
 
 
 - For hybrid testing (Mixing Selenium Web Testing with FAT Testing features using image recognition)
 
-Windows:
+_Windows:_
 
     start /b java -jar selenium-server-standalone-x.xx.x.jar -role hub -port 5555
     start /b java -cp "selenium-server-standalone-x.xx.x.jar;cerberus-extension-sikuli-x.x.x.jar" org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:5555/grid/register -port 5556 -servlets org.sikuliserver.ExecuteSikuliAction
 
 
-Linux:
+_Linux:_
 
     java -jar selenium-server-standalone-x.xx.x.jar -role hub -port 5555
     java -cp selenium-server-standalone-x.xx.x.jar:cerberus-extension-sikuli-x.x.x.jar org.openqa.grid.selenium.GridLauncherV3 -role node -hub http://localhost:5555/grid/register -port 5556 -servlets org.sikuliserver.ExecuteSikuliAction
