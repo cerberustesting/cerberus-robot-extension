@@ -50,7 +50,22 @@ public class ExecuteSikuliAction extends HttpServlet {
          * Check if picture folder exists to store the picture. If not, create
          * it.
          */
-        File dir = new File("picture");
+        String rootPath = "";
+        if (System.getProperty("java.io.tmpdir") != null) {
+            rootPath = System.getProperty("java.io.tmpdir");
+        } else {
+            String sep = "" + File.separatorChar;
+            LOG.info(sep);
+            if (sep.equalsIgnoreCase("/")) {
+                rootPath = "/tmp";
+            } else {
+                rootPath = "C:";
+            }
+            LOG.warn("Java Property for temporary folder not defined. Default to :" + rootPath);
+        }
+
+        String rootPictureFolder = rootPath + File.separator + "picture";
+        File dir = new File(rootPictureFolder);
 
         if (!dir.exists()) {
             dir.mkdir();
@@ -63,6 +78,7 @@ public class ExecuteSikuliAction extends HttpServlet {
          *
          */
         PrintStream os = null;
+        StringBuilder sb = new StringBuilder();
         try {
             LOG.info("Received: [Request from " + request.getServerName() + "]");
 
@@ -82,7 +98,6 @@ public class ExecuteSikuliAction extends HttpServlet {
                 String line = "";
 
                 LOG.debug("Start reading InputStream");
-                StringBuilder sb = new StringBuilder();
                 while (!(line = is.readLine()).equals("|ENDS|")) {
                     sb.append(line);
                 }
@@ -99,7 +114,19 @@ public class ExecuteSikuliAction extends HttpServlet {
                 int defaultWait = obj.getInt("defaultWait");
                 String extension = obj.getString("pictureExtension");
                 String start = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
-                String minSimilarity = obj.getString("minSimilarity");
+                String minSimilarity = null;
+                if (obj.has("minSimilarity")) {
+                    if (!obj.getString("minSimilarity").trim().equals("")) {
+                        minSimilarity = obj.getString("minSimilarity");
+                    }
+                }
+                int highlightElement = 0;
+                if (obj.has("highlightElement")) {
+                    if (!obj.getString("highlightElement").trim().equals("")) {
+                        String sHighlightElement = obj.getString("highlightElement");
+                        highlightElement = Integer.valueOf(sHighlightElement);
+                    }
+                }
 
                 /**
                  * Init startTime and endTime for loop retry
@@ -115,9 +142,14 @@ public class ExecuteSikuliAction extends HttpServlet {
                 String picturePath = "";
                 String logPictureInfo = "";
                 if (!"".equals(picture)) {
-                    String pictureName = new SimpleDateFormat("YYYY.MM.dd.HH.mm.ss.SSS").format(new Date()) + ".";
-                    pictureName += extension;
-                    picturePath = "picture" + File.separator + pictureName;
+                    String pictureName = new SimpleDateFormat("YYYY.MM.dd.HH.mm.ss.SSS").format(new Date());
+                    if (extension.startsWith(".")) {
+                        pictureName += extension;
+                    } else {
+                        pictureName += "." + extension;
+
+                    }
+                    picturePath = rootPictureFolder + File.separator + pictureName;
 
                     /**
                      * Decode picture and print it
@@ -142,7 +174,7 @@ public class ExecuteSikuliAction extends HttpServlet {
                  */
                 while (System.currentTimeMillis() < end_time) {
                     try {
-                        actionResult = sikuliAction.doAction(action, picturePath, text, minSimilarity);
+                        actionResult = sikuliAction.doAction(action, picturePath, text, minSimilarity, highlightElement, rootPictureFolder);
                         /**
                          * If action OK, break the loop. Else, log and try again
                          * until timeout
@@ -166,7 +198,7 @@ public class ExecuteSikuliAction extends HttpServlet {
                 LOG.info(actionResult.get("status") + " [" + action + logPictureInfo + "] finish with result:" + actionResult.get("status"));
                 os.println(actionResult.toString());
                 os.println("|ENDR|");
-                
+
                 is.close();
                 os.close();
 
@@ -175,17 +207,17 @@ public class ExecuteSikuliAction extends HttpServlet {
                 response.getWriter().print("ExecuteSikuliAction is up and running. Waiting stuff from Cerberus");
             }
 
-            
-        } catch (IOException e) {
-            LOG.warn("IOException : " + e);
+        } catch (IOException ex) {
+            LOG.warn("IOException : " + ex);
             if (os != null) {
-                os.println("Failed");
+                os.println("{\"status\" : \"Failed\", \"message\" : \"" + ex.toString() + "\"}");
                 os.println("|ENDR|");
             }
         } catch (JSONException ex) {
             LOG.warn("JSON Exception : " + ex);
+            LOG.warn("Detailed json received : " + sb.toString());
             if (os != null) {
-                os.println("Failed");
+                os.println("{\"status\" : \"Failed\", \"message\" : \"" + ex.toString() + "\"}");
                 os.println("|ENDR|");
             }
         } finally {

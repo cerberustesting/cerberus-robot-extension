@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import javax.imageio.ImageIO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
@@ -31,22 +33,23 @@ public class SikuliAction {
 
     private static final Logger LOG = LogManager.getLogger(SikuliAction.class);
 
-    JSONObject doAction(String action, String picture, String text, String minSimilarity) throws FindFailed {
+    JSONObject doAction(String action, String picture, String text, String minSimilarity, int numberOfSecondsHighlightElement, String rootPictureFolder) throws FindFailed {
         JSONObject result = new JSONObject();
 
-        boolean highlightElement = false;
-        int numberOfSeconds = 2;
-
+        boolean doHighlightElement = false;
+        int numberOfSeconds = 0;
         if (System.getProperty("highlightElement") != null) {
-            highlightElement = true;
             try {
                 numberOfSeconds = Integer.valueOf(System.getProperty("highlightElement"));
-                LOG.info("Set highlightElement to " + numberOfSeconds + " seconds");
             } catch (Exception ex) {
                 LOG.warn("Exception parsing highlightElement argument : " + ex);
-                LOG.warn("Set highlightElement to its default value : 2 seconds");
             }
-
+        }
+        if (numberOfSecondsHighlightElement > numberOfSeconds) {
+            numberOfSeconds = numberOfSecondsHighlightElement;
+        }
+        if (numberOfSeconds > 0) {
+            doHighlightElement = true;
         }
 
         try {
@@ -54,6 +57,8 @@ public class SikuliAction {
              * Result Object init with result KO
              */
             String status = "Failed";
+            String message = null;
+            String stacktrace = null;
             Screen s = new Screen();
 
             if (minSimilarity != null) {
@@ -83,7 +88,7 @@ public class SikuliAction {
                         if ("".equals(picture)) {
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(text).highlight(numberOfSeconds);
                             }
 
@@ -91,7 +96,7 @@ public class SikuliAction {
                                 status = "OK";
                             }
                         } else {
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(picture).highlight(numberOfSeconds);
                             }
                             if (1 == s.click(picture)) {
@@ -103,7 +108,7 @@ public class SikuliAction {
                         if ("".equals(picture)) {
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(text).highlight(numberOfSeconds);
                             }
 
@@ -111,7 +116,7 @@ public class SikuliAction {
                                 status = "OK";
                             }
                         } else {
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(picture).highlight(numberOfSeconds);
                             }
                             if (1 == s.doubleClick(picture)) {
@@ -123,7 +128,7 @@ public class SikuliAction {
                         if ("".equals(picture)) {
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(text).highlight(numberOfSeconds);
                             }
 
@@ -131,7 +136,7 @@ public class SikuliAction {
                                 status = "OK";
                             }
                         } else {
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(picture).highlight(numberOfSeconds);
                             }
                             if (1 == s.rightClick(picture)) {
@@ -143,7 +148,7 @@ public class SikuliAction {
                         if ("".equals(picture)) {
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(text).highlight(numberOfSeconds);
                             }
 
@@ -151,7 +156,7 @@ public class SikuliAction {
                                 status = "OK";
                             }
                         } else {
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(picture).highlight(numberOfSeconds);
                             }
                             if (1 == s.hover(picture)) {
@@ -163,14 +168,14 @@ public class SikuliAction {
                         if ("".equals(picture)) {
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(text).highlight(numberOfSeconds);
                             }
 
                             s.wait(text);
                             status = "OK";
                         } else {
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(picture).highlight(numberOfSeconds);
                             }
                             s.wait(picture);
@@ -181,14 +186,14 @@ public class SikuliAction {
                         if ("".equals(picture)) {
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(text).highlight(numberOfSeconds);
                             }
 
                             s.waitVanish(text);
                             status = "OK";
                         } else {
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(picture).highlight(numberOfSeconds);
                             }
                             s.waitVanish(picture);
@@ -198,7 +203,7 @@ public class SikuliAction {
                     case "paste":
                         // If picture is defined, click on it before pasting the text
                         if (!"".equals(picture)) {
-                            if (highlightElement) {
+                            if (doHighlightElement) {
                                 s.find(picture).highlight(numberOfSeconds);
                             }
                             if (1 == s.paste(picture, text)) {
@@ -215,184 +220,184 @@ public class SikuliAction {
                         switch (text) {
                             case "Key.SPACE":
                             case " ":
-                                res = type(s, picture, Key.SPACE, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.SPACE, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.ENTER":
-                                res = type(s, picture, Key.ENTER, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.ENTER, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.BACKSPACE":
-                                res = type(s, picture, Key.BACKSPACE, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.BACKSPACE, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.TAB":
-                                res = type(s, picture, Key.TAB, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.TAB, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.ESC":
-                                res = type(s, picture, Key.ESC, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.ESC, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.UP":
-                                res = type(s, picture, Key.UP, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.UP, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.RIGHT":
-                                res = type(s, picture, Key.RIGHT, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.RIGHT, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.DOWN":
-                                res = type(s, picture, Key.DOWN, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.DOWN, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.LEFT":
-                                res = type(s, picture, Key.LEFT, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.LEFT, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.PAGE_UP":
-                                res = type(s, picture, Key.PAGE_UP, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.PAGE_UP, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.PAGE_DOWN":
-                                res = type(s, picture, Key.PAGE_DOWN, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.PAGE_DOWN, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.DELETE":
-                                res = type(s, picture, Key.DELETE, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.DELETE, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.END":
-                                res = type(s, picture, Key.END, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.END, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.HOME":
-                                res = type(s, picture, Key.HOME, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.HOME, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.INSERT":
-                                res = type(s, picture, Key.INSERT, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.INSERT, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F1":
-                                res = type(s, picture, Key.F1, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F1, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F2":
-                                res = type(s, picture, Key.F2, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F2, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F3":
-                                res = type(s, picture, Key.F3, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F3, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F4":
-                                res = type(s, picture, Key.F4, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F4, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F5":
-                                res = type(s, picture, Key.F5, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F5, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F6":
-                                res = type(s, picture, Key.F6, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F6, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F7":
-                                res = type(s, picture, Key.F7, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F7, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F8":
-                                res = type(s, picture, Key.F8, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F8, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F9":
-                                res = type(s, picture, Key.F9, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F9, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F10":
-                                res = type(s, picture, Key.F10, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F10, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F11":
-                                res = type(s, picture, Key.F11, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F11, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F12":
-                                res = type(s, picture, Key.F12, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F12, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F13":
-                                res = type(s, picture, Key.F13, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F13, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F14":
-                                res = type(s, picture, Key.F14, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F14, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.F15":
-                                res = type(s, picture, Key.F15, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.F15, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.SHIFT":
-                                res = type(s, picture, Key.SHIFT, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.SHIFT, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.CTRL":
-                                res = type(s, picture, Key.CTRL, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.CTRL, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.ALT":
-                                res = type(s, picture, Key.ALT, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.ALT, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.ALTGR":
-                                res = type(s, picture, Key.ALTGR, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.ALTGR, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.META":
-                                res = type(s, picture, Key.META, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.META, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.CMD":
-                                res = type(s, picture, Key.CMD, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.CMD, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.WIN":
-                                res = type(s, picture, Key.WIN, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.WIN, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.PRINTSCREEN":
-                                res = type(s, picture, Key.PRINTSCREEN, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.PRINTSCREEN, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.SCROLL_LOCK":
-                                res = type(s, picture, Key.SCROLL_LOCK, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.SCROLL_LOCK, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.PAUSE":
-                                res = type(s, picture, Key.PAUSE, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.PAUSE, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.CAPS_LOCK":
-                                res = type(s, picture, Key.CAPS_LOCK, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.CAPS_LOCK, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM0":
-                                res = type(s, picture, Key.NUM0, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM0, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM1":
-                                res = type(s, picture, Key.NUM1, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM1, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM2":
-                                res = type(s, picture, Key.NUM2, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM2, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM3":
-                                res = type(s, picture, Key.NUM3, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM3, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM4":
-                                res = type(s, picture, Key.NUM4, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM4, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM5":
-                                res = type(s, picture, Key.NUM5, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM5, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM6":
-                                res = type(s, picture, Key.NUM6, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM6, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM7":
-                                res = type(s, picture, Key.NUM7, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM7, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM8":
-                                res = type(s, picture, Key.NUM8, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM8, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM9":
-                                res = type(s, picture, Key.NUM9, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM9, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.SEPARATOR":
-                                res = type(s, picture, Key.SEPARATOR, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.SEPARATOR, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NUM_LOCK":
-                                res = type(s, picture, Key.NUM_LOCK, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NUM_LOCK, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.ADD":
-                                res = type(s, picture, Key.ADD, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.ADD, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.MINUS":
-                                res = type(s, picture, Key.MINUS, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.MINUS, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.MULTIPLY":
-                                res = type(s, picture, Key.MULTIPLY, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.MULTIPLY, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.DIVIDE":
-                                res = type(s, picture, Key.DIVIDE, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.DIVIDE, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.DECIMAL":
-                                res = type(s, picture, Key.DECIMAL, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.DECIMAL, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.CONTEXT":
-                                res = type(s, picture, Key.CONTEXT, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.CONTEXT, numberOfSeconds, doHighlightElement);
                                 break;
                             case "Key.NEXT":
-                                res = type(s, picture, Key.NEXT, numberOfSeconds, highlightElement);
+                                res = type(s, picture, Key.NEXT, numberOfSeconds, doHighlightElement);
                                 break;
                         }
                         if (1 == res) {
@@ -400,7 +405,7 @@ public class SikuliAction {
                         }
                         break;
                     case "exists":
-                        if (highlightElement) {
+                        if (doHighlightElement) {
                             s.find(picture).highlight(numberOfSeconds);
                         }
                         if (s.exists(picture) != null) {
@@ -416,7 +421,7 @@ public class SikuliAction {
                         Settings.OcrTextSearch = true;
                         Settings.OcrTextRead = true;
                         //Region r = new Region(s.x, s.y, s.w, s.h);
-                        if (highlightElement) {
+                        if (doHighlightElement) {
                             s.find(text).highlight(numberOfSeconds);
                         }
                         if (s.find(text) != null) {
@@ -424,20 +429,38 @@ public class SikuliAction {
                         }
                         break;
                     case "capture":
-                        String screenshotInBase64 = getScreenshotInBase64();
+                        String screenshotInBase64 = getScreenshotInBase64(rootPictureFolder);
                         status = "OK";
                         result.put("screenshot", screenshotInBase64);
                         break;
                 }
 
+            } catch (FindFailed ex) {
+                message = "Failed finding element '" + picture + "' with minSimilarity: " + minSimilarity + " : " + ex.toStringShort();
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                ex.printStackTrace(pw);
+
+                stacktrace = sw.toString();
+                LOG.info(message);
+
             } catch (Exception ex) {
-                LOG.warn(ex);
+                message = ex.toString();
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                ex.printStackTrace(pw);
+
+                stacktrace = sw.toString();
+                LOG.error(ex, ex);
+
             } finally {
                 //Update the status
                 result.put("status", status);
+                result.put("message", message);
+                result.put("stacktrace", stacktrace);
             }
         } catch (JSONException ex) {
-            LOG.warn(ex);
+            LOG.error(ex, ex);
         }
         return result;
     }
@@ -456,9 +479,9 @@ public class SikuliAction {
 
     }
 
-    public String getScreenshotInBase64() {
+    public String getScreenshotInBase64(String rootPictureFolder) {
         String picture = "";
-        String screenshotPath = "picture" + File.separator + "Screenshot.png";
+        String screenshotPath = rootPictureFolder + File.separator + "Screenshot.png";
         InputStream istream = null;
         try {
             Screen s = new Screen();
