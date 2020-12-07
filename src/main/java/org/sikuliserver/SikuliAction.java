@@ -436,7 +436,11 @@ public class SikuliAction {
                 }
 
             } catch (FindFailed ex) {
-                message = "Failed finding element '" + picture + "' with minSimilarity: " + minSimilarity + " : " + ex.toStringShort();
+                message = "Failed finding element '" + picture + "'";
+                if (minSimilarity != null) {
+                    message += " with minSimilarity: " + minSimilarity;
+                }
+                message += " | " + ex.toStringShort();
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 ex.printStackTrace(pw);
