@@ -446,7 +446,13 @@ public class SikuliAction {
                 ex.printStackTrace(pw);
 
                 stacktrace = sw.toString();
-                LOG.info(message);
+                if (action.equals("exists")) {
+                    status = "KO";
+                } else if (action.equals("notExists")) {
+                    status = "OK";
+                } else {
+                    LOG.info(message);
+                }
 
             } catch (Exception ex) {
                 message = ex.toString();
