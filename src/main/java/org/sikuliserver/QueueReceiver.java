@@ -128,7 +128,7 @@ public class QueueReceiver {
 
     private static void setLogLevelToDebug() {
         Configurator.setLevel(System.getProperty("log4j.logger"), Level.DEBUG);
-        LOG.debug("debug enabled");
+        LOG.debug("Debug mode enabled");
     }
 
 }

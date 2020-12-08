@@ -405,16 +405,23 @@ public class SikuliAction {
                         }
                         break;
                     case "exists":
-                        if (doHighlightElement) {
-                            s.find(picture).highlight(numberOfSeconds);
-                        }
                         if (s.exists(picture) != null) {
                             status = "OK";
+                            // We found the picture so we can hightlight it.
+                            if (doHighlightElement) {
+                                LOG.debug("Highlighting Element.");
+                                s.find(picture).highlight(numberOfSeconds);
+                            }
                         }
                         break;
                     case "notExists":
-                        if (s.exists(picture) == null) {
-                            status = "OK";
+                        if (s.exists(picture) != null) {
+                            status = "KO";
+                            // We found the picture so we can hightlight it.
+                            if (doHighlightElement) {
+                                LOG.debug("Highlighting Element.");
+                                s.find(picture).highlight(numberOfSeconds);
+                            }
                         }
                         break;
                     case "findText":
@@ -435,25 +442,21 @@ public class SikuliAction {
                         break;
                 }
 
-            } catch (FindFailed ex) {
-                message = "Failed finding element '" + picture + "'";
-                if (minSimilarity != null) {
-                    message += " with minSimilarity: " + minSimilarity;
-                }
-                message += " | " + ex.toStringShort();
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                ex.printStackTrace(pw);
-
-                stacktrace = sw.toString();
-                if (action.equals("exists")) {
-                    status = "KO";
-                } else if (action.equals("notExists")) {
-                    status = "OK";
-                } else {
-                    LOG.info(message);
-                }
-
+//            } catch (FindFailed ex) {
+//                LOG.info(ex);
+//                throw ex;
+//            } catch (FindFailed ex) {
+//                message = "Failed finding element '" + picture + "'";
+//                if (minSimilarity != null) {
+//                    message += " with minSimilarity: " + minSimilarity;
+//                }
+//                message += " | " + ex.toStringShort();
+//                StringWriter sw = new StringWriter();
+//                PrintWriter pw = new PrintWriter(sw);
+//                ex.printStackTrace(pw);
+//
+//                stacktrace = sw.toString();
+//                    LOG.info(message);
             } catch (Exception ex) {
                 message = ex.toString();
                 StringWriter sw = new StringWriter();

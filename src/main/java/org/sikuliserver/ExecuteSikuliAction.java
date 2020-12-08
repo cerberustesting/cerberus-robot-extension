@@ -12,8 +12,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -167,7 +170,10 @@ public class ExecuteSikuliAction extends HttpServlet {
                 JSONObject actionResult = new JSONObject();
                 actionResult.put("status", "Failed");
                 SikuliAction sikuliAction = new SikuliAction();
-                boolean actionSuccess = false;
+                boolean breakOccured = false;
+                boolean errorOccured = false;
+                String message = null;
+                String stacktrace = null;
 
                 /**
                  * Loop on action until success or timeout
@@ -175,21 +181,63 @@ public class ExecuteSikuliAction extends HttpServlet {
                 while (System.currentTimeMillis() < end_time) {
                     try {
                         actionResult = sikuliAction.doAction(action, picturePath, text, minSimilarity, highlightElement, rootPictureFolder);
+                        LOG.debug("JSON Result from Action : " + actionResult.toString());
                         /**
                          * If action OK, break the loop. Else, log and try again
                          * until timeout
                          */
                         if (actionResult.has("status")) {
-                            if ("OK".equals(actionResult.get("status"))) {
-                                actionSuccess = true;
-                                break;
+                            if (action.equals("exists")) {
+                                if ("OK".equals(actionResult.get("status"))) {
+                                    breakOccured = true;
+                                    LOG.debug("Break retry loop on exists action. (Element has been found)");
+                                    break;
+                                }
+                            } else if (action.equals("notExists")) {
+                                if ("KO".equals(actionResult.get("status"))) {
+                                    breakOccured = true;
+                                    LOG.debug("Break retry loop on notExists action (Element has been found)");
+                                    break;
+                                }
+
+                            } else {
+                                if ("OK".equals(actionResult.get("status"))) {
+                                    breakOccured = true;
+                                    LOG.debug("Break retry for default action");
+                                    break;
+                                }
                             }
+                        } else {
+                            LOG.debug("Missing status entry from JSON.");
                         }
+                        LOG.info("Retrying again during " + (end_time - System.currentTimeMillis()) + " ms");
 
                     } catch (FindFailed ex) {
                         LOG.debug("Element Not Found yet: " + ex);
-                        LOG.info("Retrying again during " + (System.currentTimeMillis() - end_time) + " ms");
+                        LOG.info("Retrying again during " + (end_time - System.currentTimeMillis()) + " ms");
+
+                    } catch (Exception ex) {
+                        LOG.error("General Exception : ", ex);
+                        message = ex.toString();
+                        StringWriter sw = new StringWriter();
+                        PrintWriter pw = new PrintWriter(sw);
+                        ex.printStackTrace(pw);
+                        stacktrace = sw.toString();
+                        actionResult.put("message", message);
+                        actionResult.put("stacktrace", stacktrace);
+                        actionResult.put("status", "Failed");
+                        errorOccured = true;
+                        break;
                     }
+                }
+
+                if (action.equals("exists") && !breakOccured && !errorOccured) {
+                    LOG.debug("We looped until the end never finding the element so can conclude it is not there. Exists --> KO");
+                    actionResult.put("status", "KO");
+                }
+                if (action.equals("notExists") && !breakOccured && !errorOccured) {
+                    LOG.debug("We looped until the end never finding the element so can conclude it is not there. NotExists --> OK");
+                    actionResult.put("status", "OK");
                 }
 
                 /**
@@ -203,22 +251,35 @@ public class ExecuteSikuliAction extends HttpServlet {
                 os.close();
 
             } else {
-                LOG.info("ExecuteSikuliAction is up and running. Waiting stuff from Cerberus");
-                response.getWriter().print("ExecuteSikuliAction is up and running. Waiting stuff from Cerberus");
+                LOG.info("ExecuteSikuliAction is up and running. Waiting for requests from Cerberus");
+                response.getWriter().print("ExecuteSikuliAction is up and running. Waiting for requests from Cerberus");
             }
 
-        } catch (IOException ex) {
-            LOG.warn("IOException : " + ex);
-            if (os != null) {
-                os.println("{\"status\" : \"Failed\", \"message\" : \"" + ex.toString() + "\"}");
-                os.println("|ENDR|");
-            }
         } catch (JSONException ex) {
             LOG.warn("JSON Exception : " + ex);
             LOG.warn("Detailed json received : " + sb.toString());
             if (os != null) {
-                os.println("{\"status\" : \"Failed\", \"message\" : \"" + ex.toString() + "\"}");
+                os.println("{\"status\" : \"Failed\", \"message\" : \"Unsupported request to Extension\"}");
                 os.println("|ENDR|");
+            }
+        } catch (Exception ex) {
+            LOG.error("Exception : " + ex);
+            try {
+                if (os != null) {
+                    String message = ex.toString();
+                    StringWriter sw = new StringWriter();
+                    PrintWriter pw = new PrintWriter(sw);
+                    ex.printStackTrace(pw);
+                    String stacktrace = sw.toString();
+                    JSONObject result = new JSONObject();
+                    result.put("status", "Failed");
+                    result.put("message", message);
+                    result.put("stacktrace", stacktrace);
+                    os.println(result.toString());
+                    os.println("|ENDR|");
+                }
+            } catch (JSONException ex1) {
+                LOG.error(ex1, ex1);
             }
         } finally {
             FileDeleteStrategy.FORCE.delete(dir);
