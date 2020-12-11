@@ -474,6 +474,8 @@ public class SikuliAction {
             }
         } catch (JSONException ex) {
             LOG.error(ex, ex);
+        } catch (Exception ex) {
+            LOG.error(ex, ex);
         }
         return result;
     }

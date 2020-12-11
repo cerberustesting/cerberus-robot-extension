@@ -21,6 +21,7 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
+import org.sikuliserver.version.Infos;
 
 /**
  *
@@ -104,7 +105,8 @@ public class QueueReceiver {
             /*
              * Start the server
              */
-            LOG.info("Cerberus Extension Sikuli 1.1.7 - Http Server Launching on port : " + portParam);
+            Infos infos = new Infos();
+            LOG.info(infos.getProjectNameAndVersion() + " - Http Server Launching on port : " + portParam);
             Server server = new Server();
 
             ServerConnector connector = new ServerConnector(server);
@@ -122,7 +124,7 @@ public class QueueReceiver {
             LOG.warn("Server Stopped.");
 
         } catch (Exception ex) {
-            LOG.warn(ex);
+            LOG.error(ex, ex);
         }
     }
 
