@@ -74,6 +74,11 @@ public final class Infos {
     private String projectNameAndVersion;
 
     /**
+     * Build Id
+     */
+    private String projectBuildId;
+
+    /**
      * Gets the project name
      *
      * @return the project name
@@ -103,6 +108,14 @@ public final class Infos {
     }
 
     /**
+     *
+     * @return
+     */
+    public String getProjectBuildId() {
+        return projectBuildId;
+    }
+
+    /**
      * Private constructor as singleton class
      */
     public Infos() {
@@ -120,6 +133,7 @@ public final class Infos {
             projectName = properties.getProperty("project.name");
             projectVersion = properties.getProperty("project.version");
             projectNameAndVersion = projectName + VERSION_SEPARATOR + projectVersion;
+            projectBuildId = properties.getProperty("project.build");
         } catch (IOException ex) {
             LOG.error(ex, ex);
         }

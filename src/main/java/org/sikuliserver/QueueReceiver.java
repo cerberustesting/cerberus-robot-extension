@@ -106,7 +106,7 @@ public class QueueReceiver {
              * Start the server
              */
             Infos infos = new Infos();
-            LOG.info(infos.getProjectNameAndVersion() + " - Http Server Launching on port : " + portParam);
+            LOG.info(infos.getProjectNameAndVersion() + " - Build " + infos.getProjectBuildId() + " - Http Server Launching on port : " + portParam);
             Server server = new Server();
 
             ServerConnector connector = new ServerConnector(server);
