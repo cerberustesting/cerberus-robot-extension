@@ -16,7 +16,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.Level;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -77,11 +76,13 @@ public class ExecuteSikuliAction extends HttpServlet {
             dir.mkdir();
         }
 
-        /**
-         *
-         */
+        // Forcing a garbage collection
+        System.gc();
+
         PrintStream os = null;
+        BufferedReader is = null;
         StringBuilder sb = new StringBuilder();
+
         try {
             LOG.info("Received: [Request from " + request.getServerName() + "]");
 
@@ -91,7 +92,7 @@ public class ExecuteSikuliAction extends HttpServlet {
              * contains action, picture, text, defaultWait, pictureExtension
              */
             LOG.debug("Trying to open InputStream");
-            BufferedReader is = new BufferedReader(new InputStreamReader(request.getInputStream()));
+            is = new BufferedReader(new InputStreamReader(request.getInputStream()));
 
             //continue if BufferReader is not null, 
             //else, print message
@@ -181,7 +182,11 @@ public class ExecuteSikuliAction extends HttpServlet {
                 while (System.currentTimeMillis() < end_time) {
                     try {
                         actionResult = sikuliAction.doAction(action, picturePath, text, minSimilarity, highlightElement, rootPictureFolder);
-                        LOG.debug("JSON Result from Action : " + actionResult.toString());
+                        if (actionResult.toString().length() > 300) {
+                            LOG.debug("JSON Result from Action : " + actionResult.toString().substring(0, 300) + "...");
+                        } else {
+                            LOG.debug("JSON Result from Action : " + actionResult.toString());
+                        }
                         /**
                          * If action OK, break the loop. Else, log and try again
                          * until timeout
@@ -282,6 +287,20 @@ public class ExecuteSikuliAction extends HttpServlet {
                 LOG.error(ex1, ex1);
             }
         } finally {
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (Exception e) {
+                    LOG.error("Exception when closing output stream.", e);
+                }
+            }
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (Exception e) {
+                    LOG.error("Exception when closing output stream.", e);
+                }
+            }
             FileDeleteStrategy.FORCE.delete(dir);
         }
     }

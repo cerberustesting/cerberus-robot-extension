@@ -5,6 +5,9 @@
  */
 package org.sikuliserver;
 
+//import java.awt.MouseInfo;
+//import java.awt.Point;
+//import java.awt.PointerInfo;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,6 +26,8 @@ import org.sikuli.script.Key;
 import org.sikuli.script.Screen;
 import org.sikuli.script.App;
 import org.sikuli.basics.Settings;
+import org.sikuli.script.Button;
+import org.sikuli.script.Mouse;
 import org.sikuli.script.ScreenImage;
 
 /**
@@ -35,6 +40,10 @@ public class SikuliAction {
 
     JSONObject doAction(String action, String picture, String text, String minSimilarity, int numberOfSecondsHighlightElement, String rootPictureFolder) throws FindFailed {
         JSONObject result = new JSONObject();
+
+        Settings.DebugLogs = true;
+        Settings.InfoLogs = true;
+        Settings.ProfileLogs = true;
 
         boolean doHighlightElement = false;
         int numberOfSeconds = 0;
@@ -161,6 +170,44 @@ public class SikuliAction {
                             }
                             if (1 == s.hover(picture)) {
                                 status = "OK";
+                            }
+                        }
+                        break;
+                    case "mouseDown":
+                        Mouse.down(Button.LEFT);
+                        status = "OK";
+                        break;
+                    case "mouseUp":
+                        Mouse.up(Button.LEFT);
+                        status = "OK";
+                        break;
+                    case "mouseMove":
+                        String[] instructions = text.split(";");
+                        for (String instruction : instructions) {
+                            if (!instruction.trim().isEmpty()) {
+                                String[] pos = instruction.trim().split(",");
+                                int xoff = 0;
+                                int yoff = 0;
+                                xoff = Integer.valueOf(pos[0].trim());
+                                if (pos.length > 1) {
+                                    yoff = Integer.valueOf(pos[1].trim());
+                                }
+//                                PointerInfo a = MouseInfo.getPointerInfo();
+//                                Point b = a.getLocation();
+//                                int x = (int) b.getX();
+//                                int y = (int) b.getY();
+//                                LOG.info("Current Position : " + x + " | " + y);
+
+                                LOG.info("Move : " + xoff + " | " + yoff);
+                                Mouse.move(xoff, yoff);
+                                status = "OK";
+                                Thread.sleep(1000);
+
+//                                a = MouseInfo.getPointerInfo();
+//                                b = a.getLocation();
+//                                x = (int) b.getX();
+//                                y = (int) b.getY();
+//                                LOG.info("New Position : " + x + " | " + y);
                             }
                         }
                         break;
@@ -491,10 +538,9 @@ public class SikuliAction {
             result = s.type(text);
         }
         return result;
-
     }
 
-    public String getScreenshotInBase64(String rootPictureFolder) {
+    private String getScreenshotInBase64(String rootPictureFolder) {
         String picture = "";
         String screenshotPath = rootPictureFolder + File.separator + "Screenshot.png";
         InputStream istream = null;
@@ -527,4 +573,5 @@ public class SikuliAction {
         }
         return picture;
     }
+
 }
