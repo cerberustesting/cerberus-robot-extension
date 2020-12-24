@@ -29,6 +29,7 @@ import org.sikuli.basics.Settings;
 import org.sikuli.script.Button;
 import org.sikuli.script.Mouse;
 import org.sikuli.script.ScreenImage;
+import org.sikuli.script.Location;
 
 /**
  *
@@ -184,30 +185,55 @@ public class SikuliAction {
                     case "mouseMove":
                         String[] instructions = text.split(";");
                         for (String instruction : instructions) {
-                            if (!instruction.trim().isEmpty()) {
-                                String[] pos = instruction.trim().split(",");
-                                int xoff = 0;
-                                int yoff = 0;
-                                xoff = Integer.valueOf(pos[0].trim());
-                                if (pos.length > 1) {
-                                    yoff = Integer.valueOf(pos[1].trim());
-                                }
-//                                PointerInfo a = MouseInfo.getPointerInfo();
-//                                Point b = a.getLocation();
-//                                int x = (int) b.getX();
-//                                int y = (int) b.getY();
-//                                LOG.info("Current Position : " + x + " | " + y);
+                            String curInstruction = instruction.trim();
+                            if (!curInstruction.isEmpty()) {
 
-                                LOG.info("Move : " + xoff + " | " + yoff);
-                                Mouse.move(xoff, yoff);
+                                // Display position before move.
+                                Location loc = Mouse.at();
+                                int x = (int) loc.getX();
+                                int y = (int) loc.getY();
+                                LOG.info("Current Position : " + x + " | " + y);
+
+                                // Determine if coords are in 'absolute' mode
+                                boolean isAbsolute = false;
+                                if (curInstruction.contains("absolute")) {
+                                    isAbsolute = true;
+                                    curInstruction = curInstruction.replace("absolute", "").trim();
+                                }
+
+                                // Determine the target coords to move (managing 'center' keyword)
+                                int x1 = 0;
+                                int y1 = 0;
+                                if (curInstruction.contains("center")) {
+                                    isAbsolute = true;
+                                    Location tmpPos = s.getBottomRight();
+                                    x1 = tmpPos.getX() / 2;
+                                    y1 = tmpPos.getY() / 2;
+                                } else {
+                                    String[] pos = curInstruction.trim().split(",");
+                                    x1 = Integer.valueOf(pos[0].trim());
+                                    if (pos.length > 1) {
+                                        y1 = Integer.valueOf(pos[1].trim());
+                                    }
+                                }
+
+                                if (isAbsolute) {
+                                    LOG.info("Move (Absolute) : " + x1 + " | " + y1);
+                                    Location newPos = new Location(x1, y1);
+                                    Mouse.move(newPos);
+                                } else {
+                                    LOG.info("Move (Relative) : " + x1 + " | " + y1);
+                                    Mouse.move(x1, y1);
+                                }
+
                                 status = "OK";
                                 Thread.sleep(1000);
 
-//                                a = MouseInfo.getPointerInfo();
-//                                b = a.getLocation();
-//                                x = (int) b.getX();
-//                                y = (int) b.getY();
-//                                LOG.info("New Position : " + x + " | " + y);
+                                // Display position after move.
+                                loc = Mouse.at();
+                                x = (int) loc.getX();
+                                y = (int) loc.getY();
+                                LOG.info("New Position : " + x + " | " + y);
                             }
                         }
                         break;
@@ -486,6 +512,15 @@ public class SikuliAction {
                         String screenshotInBase64 = getScreenshotInBase64(rootPictureFolder);
                         status = "OK";
                         result.put("screenshot", screenshotInBase64);
+                        break;
+                    case "endExecution":
+                        /**
+                         * The aim of that action is to put back the status of
+                         * the robot to a stable situation. For example, we stop
+                         * pressing the mouse button in case it was pressed.
+                         */
+                        Mouse.up(Button.LEFT);
+                        status = "OK";
                         break;
                 }
 
