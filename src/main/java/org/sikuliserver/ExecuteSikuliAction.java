@@ -179,7 +179,8 @@ public class ExecuteSikuliAction extends HttpServlet {
                 /**
                  * Loop on action until success or timeout
                  */
-                while (System.currentTimeMillis() < end_time) {
+                int i = 0;
+                while (System.currentTimeMillis() < end_time && i++ < 500) {
                     try {
                         actionResult = sikuliAction.doAction(action, picturePath, text, minSimilarity, highlightElement, rootPictureFolder);
                         if (actionResult.toString().length() > 300) {
@@ -261,8 +262,7 @@ public class ExecuteSikuliAction extends HttpServlet {
             }
 
         } catch (JSONException ex) {
-            LOG.warn("JSON Exception : " + ex);
-            LOG.warn("Detailed json received : " + sb.toString());
+            LOG.warn("JSON Exception : " + ex, ex);
             if (os != null) {
                 os.println("{\"status\" : \"Failed\", \"message\" : \"Unsupported request to Extension\"}");
                 os.println("|ENDR|");

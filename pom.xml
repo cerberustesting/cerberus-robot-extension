@@ -59,10 +59,6 @@
     </build>
     <repositories>
         <repository>
-            <id>uni-due.de</id>
-            <url>http://mvn.is.inf.uni-due.de:8081/nexus/content/repositories/atunes-dependencies/</url>
-        </repository>        
-        <repository>
             <id>sonatype-ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>

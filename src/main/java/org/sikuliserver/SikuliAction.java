@@ -45,6 +45,9 @@ public class SikuliAction {
         Settings.DebugLogs = true;
         Settings.InfoLogs = true;
         Settings.ProfileLogs = true;
+        Settings.TraceLogs = true;
+        Settings.ActionLogs = true;
+        Settings.UserLogs = true;
 
         boolean doHighlightElement = false;
         int numberOfSeconds = 0;
@@ -541,11 +544,12 @@ public class SikuliAction {
 //                    LOG.info(message);
             } catch (Exception ex) {
                 message = ex.toString();
+
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
                 ex.printStackTrace(pw);
-
                 stacktrace = sw.toString();
+
                 LOG.error(ex, ex);
 
             } finally {
@@ -557,7 +561,22 @@ public class SikuliAction {
         } catch (JSONException ex) {
             LOG.error(ex, ex);
         } catch (Exception ex) {
-            LOG.error(ex, ex);
+            try {
+                LOG.error(ex, ex);
+                //Update the status
+                String message = ex.toString();
+
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                ex.printStackTrace(pw);
+                String stacktrace = sw.toString();
+
+                result.put("status", "Failed");
+                result.put("message", message);
+                result.put("stacktrace", stacktrace);
+            } catch (JSONException ex1) {
+                LOG.error(ex, ex);
+            }
         }
         return result;
     }
