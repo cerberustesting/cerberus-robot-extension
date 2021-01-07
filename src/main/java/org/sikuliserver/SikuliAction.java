@@ -98,17 +98,17 @@ public class SikuliAction {
                         status = "OK";
                         break;
                     case "click":
-                        if ("".equals(picture)) {
-                            Settings.OcrTextSearch = true;
-                            Settings.OcrTextRead = true;
-                            if (doHighlightElement) {
-                                s.find(text).highlight(numberOfSeconds);
-                            }
-
-                            if (1 == s.find(text).click()) {
-                                status = "OK";
-                            }
-                        } else {
+                        // Simple click
+                        if ("".equals(picture) && "".equals(text)) {
+                            LOG.debug("Simple Click Action.");
+                            Location loc = Mouse.at();
+                            loc.click();
+                            Thread.sleep(500);
+                            status = "OK";
+                        }
+                        // click on a picture
+                        if (!"".equals(picture)) {
+                            LOG.debug("Click on a picture Action.");
                             if (doHighlightElement) {
                                 s.find(picture).highlight(numberOfSeconds);
                             }
@@ -116,8 +116,30 @@ public class SikuliAction {
                                 status = "OK";
                             }
                         }
+                        // click on a text
+                        if (!"".equals(text)) {
+                            LOG.debug("Click on a text Action.");
+                            Settings.OcrTextSearch = true;
+                            Settings.OcrTextRead = true;
+                            if (doHighlightElement) {
+                                s.find(text).highlight(numberOfSeconds);
+                            }
+                            if (1 == s.find(text).click()) {
+                                status = "OK";
+                            }
+                        }
                         break;
                     case "doubleClick":
+                        // Simple click
+                        if ("".equals(picture) && "".equals(text)) {
+                            LOG.debug("Simple Doubleclick Action.");
+                            Location loc = Mouse.at();
+                            loc.click();
+                            Thread.sleep(50);
+                            loc.click();
+                            Thread.sleep(500);
+                            status = "OK";
+                        }
                         if ("".equals(picture)) {
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
@@ -138,6 +160,14 @@ public class SikuliAction {
                         }
                         break;
                     case "rightClick":
+                        // Simple click
+                        if ("".equals(picture) && "".equals(text)) {
+                            LOG.debug("Simple Rightclick Action.");
+                            Location loc = Mouse.at();
+                            loc.rightClick();
+                            Thread.sleep(500);
+                            status = "OK";
+                        }
                         if ("".equals(picture)) {
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
