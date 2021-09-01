@@ -21,15 +21,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.sikuli.script.FindFailed;
-import org.sikuli.script.Key;
-import org.sikuli.script.Screen;
-import org.sikuli.script.App;
+import org.sikuli.script.*;
 import org.sikuli.basics.Settings;
-import org.sikuli.script.Button;
-import org.sikuli.script.Mouse;
-import org.sikuli.script.ScreenImage;
-import org.sikuli.script.Location;
 
 /**
  *
@@ -39,7 +32,7 @@ public class SikuliAction {
 
     private static final Logger LOG = LogManager.getLogger(SikuliAction.class);
 
-    JSONObject doAction(String action, String picture, String text, String minSimilarity, int numberOfSecondsHighlightElement, String rootPictureFolder) throws FindFailed {
+    JSONObject doAction(String action, String picture, String picture2, String text, String text2, String minSimilarity, int numberOfSecondsHighlightElement, String rootPictureFolder) throws FindFailed {
         JSONObject result = new JSONObject();
 
         Settings.DebugLogs = true;
@@ -127,6 +120,22 @@ public class SikuliAction {
                             if (1 == s.find(text).click()) {
                                 status = "OK";
                             }
+                        }
+                        break;
+                    case "dragAndDrop":
+                        Settings.OcrTextSearch = true;
+                        Settings.OcrTextRead = true;
+
+                        // DragAndDrop on picture
+                        Match elementDrag = !"".equals(picture) ? s.find(picture) : s.find(text);
+                        Match elementDrop = !"".equals(picture2) ? s.find(picture2) : s.find(text2);
+
+                        if (doHighlightElement) {
+                            elementDrag.highlight(numberOfSeconds);
+                            elementDrop.highlight(numberOfSeconds);
+                        }
+                        if (1 == s.dragDrop(elementDrag, elementDrop)) {
+                            status = "OK";
                         }
                         break;
                     case "doubleClick":
@@ -511,7 +520,7 @@ public class SikuliAction {
                         }
                         break;
                     case "exists":
-                        if (s.exists(picture) != null) {
+                        if (s.exists(new Pattern(picture).similar(Double.parseDouble(minSimilarity))) != null) {
                             status = "OK";
                             // We found the picture so we can hightlight it.
                             if (doHighlightElement) {

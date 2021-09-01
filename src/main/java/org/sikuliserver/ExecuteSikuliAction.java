@@ -114,10 +114,13 @@ public class ExecuteSikuliAction extends HttpServlet {
                 JSONObject obj = new JSONObject(sb.toString());
                 String action = obj.getString("action");
                 String picture = obj.getString("picture");
+                String picture2 = obj.getString("picture2");
                 String text = obj.getString("text");
+                String text2 = obj.getString("text2");
                 int defaultWait = obj.getInt("defaultWait");
                 String extension = obj.getString("pictureExtension");
-                String start = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
+                String extension2 = obj.getString("picture2Extension");
+
                 String minSimilarity = null;
                 if (obj.has("minSimilarity")) {
                     if (!obj.getString("minSimilarity").trim().equals("")) {
@@ -166,6 +169,28 @@ public class ExecuteSikuliAction extends HttpServlet {
                     logPictureInfo = ": on picture " + picturePath;
                 }
 
+                String picture2Path = "";
+                if (!"".equals(picture2)) {
+                    String picture2Name = new SimpleDateFormat("YYYY.MM.dd.HH.mm.ss.SSS").format(new Date());
+                    if (extension2.startsWith(".")) {
+                        picture2Name += extension2;
+                    } else {
+                        picture2Name += "." + extension2;
+
+                    }
+                    picture2Path = rootPictureFolder + File.separator + picture2Name;
+
+                    /**
+                     * Decode picture and print it
+                     */
+                    byte[] data = Base64.decodeBase64(picture2);
+                    try (OutputStream stream = new FileOutputStream(picture2Path)) {
+                        stream.write(data);
+                    }
+                    //Update logPictureInfo with that info
+                    logPictureInfo += " and picture " + picture2Path;
+                }
+
                 LOG.info("Executing: [" + action + logPictureInfo + "]");
 
                 JSONObject actionResult = new JSONObject();
@@ -182,7 +207,7 @@ public class ExecuteSikuliAction extends HttpServlet {
                 int i = 0;
                 while (System.currentTimeMillis() < end_time && i++ < 500) {
                     try {
-                        actionResult = sikuliAction.doAction(action, picturePath, text, minSimilarity, highlightElement, rootPictureFolder);
+                        actionResult = sikuliAction.doAction(action, picturePath, picture2Path, text, text2, minSimilarity, highlightElement, rootPictureFolder);
                         if (actionResult.toString().length() > 300) {
                             LOG.debug("JSON Result from Action : " + actionResult.toString().substring(0, 300) + "...");
                         } else {
