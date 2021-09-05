@@ -114,12 +114,21 @@ public class ExecuteSikuliAction extends HttpServlet {
                 JSONObject obj = new JSONObject(sb.toString());
                 String action = obj.getString("action");
                 String picture = obj.getString("picture");
-                String picture2 = obj.getString("picture2");
+                String picture2 = "";
+                if (obj.has("picture2")) {
+                    picture2 = obj.getString("picture2");
+                }
                 String text = obj.getString("text");
-                String text2 = obj.getString("text2");
+                String text2 = "";
+                if (obj.has("text2")) {
+                    text2 = obj.getString("text2");
+                }
                 int defaultWait = obj.getInt("defaultWait");
                 String extension = obj.getString("pictureExtension");
-                String extension2 = obj.getString("picture2Extension");
+                String extension2 = "";
+                if (obj.has("picture2Extension")) {
+                    extension2 = obj.getString("picture2Extension");
+                }
 
                 String minSimilarity = null;
                 if (obj.has("minSimilarity")) {
