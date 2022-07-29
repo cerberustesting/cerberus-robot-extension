@@ -33,7 +33,10 @@ public class SikuliAction {
 
     private static final Logger LOG = LogManager.getLogger(SikuliAction.class);
 
-    JSONObject doAction(String action, String picture, String picture2, String text, String text2, String minSimilarity, int numberOfSecondsHighlightElement, String rootPictureFolder) throws FindFailed {
+    JSONObject doAction(String action, String picture, String picture2, String text, String text2,
+            Double minSimilarity, Double typeDelay, int numberOfSecondsHighlightElement, String rootPictureFolder,
+            int xOffset, int yOffset, int xOffset2, int yOffset2) throws FindFailed {
+
         JSONObject result = new JSONObject();
 
         Settings.DebugLogs = true;
@@ -68,27 +71,13 @@ public class SikuliAction {
             String stacktrace = null;
             Screen s = new Screen();
 
-            if (minSimilarity != null) {
-                LOG.debug("Setting MinSimilarity to : " + minSimilarity);
-                try {
-                    Double newMinSimilarity = Double.parseDouble(minSimilarity);
-                    Settings.MinSimilarity = Double.parseDouble(minSimilarity);
-                } catch (Exception e) {
-                    LOG.error("minSimilarity parameter format is not valid : " + String.valueOf(minSimilarity) + " - Should be un double format (ex : 0.7). Value default to 0.7");
-                    minSimilarity = "0.7";
-                }
-
-            } else {
-                LOG.info("minSimilarity parameter format is not defined. Value default to 0.7");
-                minSimilarity = "0.7";
-            }
-
             /**
              * Switch on Action. Do the action. If no exception raised, or
              * result from sikuli = 1, update status to OK
              */
             try {
                 switch (action) {
+
                     case "openApp":
                         LOG.info("Opening Application : " + text);
                         App app = new App(text);
@@ -101,45 +90,109 @@ public class SikuliAction {
                         openApp.close();
                         status = "OK";
                         break;
+
+                    // All actions that require a single element.
                     case "click":
+                    case "doubleClick":
+                    case "rightClick":
+                    case "mouseOver":
                         // Simple click
                         if ("".equals(picture) && "".equals(text)) {
-                            LOG.debug("Simple Click Action.");
+                            LOG.debug("Simple Click|doubleClick|rightClick Action.");
                             Location loc = Mouse.at();
-                            loc.click();
+                            switch (action) {
+                                case "doubleClick":
+                                    loc.doubleClick();
+                                    break;
+                                case "rightClick":
+                                    loc.rightClick();
+                                    break;
+                                case "click":
+                                    loc.click();
+                                    break;
+                                default:
+                                    break;
+                            }
                             Thread.sleep(500);
                             status = "OK";
                         }
                         // click on a picture
                         if (!"".equals(picture)) {
-                            LOG.debug("Click on a picture Action.");
-                            if (doHighlightElement) {
-                                s.find(picture).highlight(numberOfSeconds);
+                            LOG.debug("Click|doubleClick|rightClick|mouseOver an IMAGE Action.");
+                            Pattern pattern = new Pattern(picture).similar(minSimilarity);
+                            pattern.targetOffset(xOffset, yOffset);
+                            Region region = s.exists(pattern);
+                            if (region != null && doHighlightElement) {
+                                region.highlight(numberOfSeconds);
                             }
-                            if (1 == s.click(picture)) {
-                                status = "OK";
+                            if (region != null) {
+                                int actSikuli;
+                                switch (action) {
+                                    case "doubleClick":
+                                        actSikuli = region.doubleClick();
+                                        break;
+                                    case "rightClick":
+                                        actSikuli = region.rightClick();
+                                        break;
+                                    case "mouseOver":
+                                        actSikuli = region.hover();
+                                        break;
+                                    default:
+                                        actSikuli = region.click();
+                                        break;
+                                }
+                                if (actSikuli == 1) {
+                                    status = "OK";
+                                } else {
+                                    message = getMessageWitthOffset("Element to " + action + " could not be found or click out of bound !!", region, xOffset, yOffset, minSimilarity);
+                                }
+                            } else {
+                                message = getMessageWitthOffset("Element to " + action + " could not be found or click out of bound !!", region, xOffset, yOffset, minSimilarity);
                             }
                         }
                         // click on a text
                         if (!"".equals(text)) {
-                            LOG.debug("Click on a text Action.");
+                            LOG.debug("Click|doubleClick|rightClick|mouseOver a TEXT Action.");
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
-                            if (doHighlightElement) {
-                                s.find(text).highlight(numberOfSeconds);
+                            Region region = s.existsText(text);
+                            if (region != null && doHighlightElement) {
+                                region.highlight(numberOfSeconds);
                             }
-                            if (1 == s.find(text).click()) {
-                                status = "OK";
+                            if (region != null) {
+                                int actSikuli;
+                                switch (action) {
+                                    case "doubleClick":
+                                        actSikuli = region.doubleClick();
+                                        break;
+                                    case "rightClick":
+                                        actSikuli = region.rightClick();
+                                        break;
+                                    case "mouseOver":
+                                        actSikuli = region.hover();
+                                        break;
+                                    default:
+                                        actSikuli = region.click();
+                                        break;
+                                }
+                                if (actSikuli == 1) {
+                                    status = "OK";
+                                } else {
+                                    message = getMessageWitthOffset("Text '" + text + "' to " + action + " could not be found !!", region, 0, 0, null);
+                                }
+                            } else {
+                                message = getMessageWitthOffset("Text '" + text + "' to " + action + " could not be found !!", region, 0, 0, null);
                             }
                         }
                         break;
+
                     case "dragAndDrop":
                         Settings.OcrTextSearch = true;
                         Settings.OcrTextRead = true;
 
                         // DragAndDrop on picture
-                        Match elementDrag = !"".equals(picture) ? s.find(picture) : s.find(text);
-                        Match elementDrop = !"".equals(picture2) ? s.find(picture2) : s.find(text2);
+                        Match elementDrag = !"".equals(picture) ? s.find(picture) : s.findText(text);
+                        Match elementDrop = !"".equals(picture2) ? s.find(picture2) : s.findText(text2);
 
                         if (doHighlightElement) {
                             elementDrag.highlight(numberOfSeconds);
@@ -149,92 +202,17 @@ public class SikuliAction {
                             status = "OK";
                         }
                         break;
-                    case "doubleClick":
-                        // Simple click
-                        if ("".equals(picture) && "".equals(text)) {
-                            LOG.debug("Simple Doubleclick Action.");
-                            Location loc = Mouse.at();
-                            loc.click();
-                            Thread.sleep(50);
-                            loc.click();
-                            Thread.sleep(500);
-                            status = "OK";
-                        }
-                        if ("".equals(picture)) {
-                            Settings.OcrTextSearch = true;
-                            Settings.OcrTextRead = true;
-                            if (doHighlightElement) {
-                                s.find(text).highlight(numberOfSeconds);
-                            }
 
-                            if (1 == s.find(text).doubleClick()) {
-                                status = "OK";
-                            }
-                        } else {
-                            if (doHighlightElement) {
-                                s.find(picture).highlight(numberOfSeconds);
-                            }
-                            if (1 == s.doubleClick(picture)) {
-                                status = "OK";
-                            }
-                        }
-                        break;
-                    case "rightClick":
-                        // Simple click
-                        if ("".equals(picture) && "".equals(text)) {
-                            LOG.debug("Simple Rightclick Action.");
-                            Location loc = Mouse.at();
-                            loc.rightClick();
-                            Thread.sleep(500);
-                            status = "OK";
-                        }
-                        if ("".equals(picture)) {
-                            Settings.OcrTextSearch = true;
-                            Settings.OcrTextRead = true;
-                            if (doHighlightElement) {
-                                s.find(text).highlight(numberOfSeconds);
-                            }
-
-                            if (1 == s.find(text).rightClick()) {
-                                status = "OK";
-                            }
-                        } else {
-                            if (doHighlightElement) {
-                                s.find(picture).highlight(numberOfSeconds);
-                            }
-                            if (1 == s.rightClick(picture)) {
-                                status = "OK";
-                            }
-                        }
-                        break;
-                    case "mouseOver":
-                        if ("".equals(picture)) {
-                            Settings.OcrTextSearch = true;
-                            Settings.OcrTextRead = true;
-                            if (doHighlightElement) {
-                                s.find(text).highlight(numberOfSeconds);
-                            }
-
-                            if (1 == s.find(text).hover()) {
-                                status = "OK";
-                            }
-                        } else {
-                            if (doHighlightElement) {
-                                s.find(picture).highlight(numberOfSeconds);
-                            }
-                            if (1 == s.hover(picture)) {
-                                status = "OK";
-                            }
-                        }
-                        break;
                     case "mouseDown":
                         Mouse.down(Button.LEFT);
                         status = "OK";
                         break;
+
                     case "mouseUp":
                         Mouse.up(Button.LEFT);
                         status = "OK";
                         break;
+
                     case "mouseMove":
                         String[] instructions = text.split(";");
                         for (String instruction : instructions) {
@@ -290,15 +268,16 @@ public class SikuliAction {
                             }
                         }
                         break;
+
                     case "wait":
                         if ("".equals(picture)) {
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
                             if (doHighlightElement) {
-                                s.find(text).highlight(numberOfSeconds);
+                                s.findText(text).highlight(numberOfSeconds);
                             }
 
-                            s.wait(text);
+                            s.waitText(text);
                             status = "OK";
                         } else {
                             if (doHighlightElement) {
@@ -308,12 +287,13 @@ public class SikuliAction {
                             status = "OK";
                         }
                         break;
+
                     case "waitVanish":
                         if ("".equals(picture)) {
                             Settings.OcrTextSearch = true;
                             Settings.OcrTextRead = true;
                             if (doHighlightElement) {
-                                s.find(text).highlight(numberOfSeconds);
+                                s.findText(text).highlight(numberOfSeconds);
                             }
 
                             s.waitVanish(text);
@@ -326,6 +306,7 @@ public class SikuliAction {
                             status = "OK";
                         }
                         break;
+
                     case "paste":
                         // If picture is defined, click on it before pasting the text
                         if (!"".equals(picture)) {
@@ -341,37 +322,69 @@ public class SikuliAction {
                             }
                         }
                         break;
+
                     case "type":
                         int res = 0;
                         LOG.info("About to key :'" + text + "' with modifier '" + text2 + "'");
                         text = convertTextToType(text);
                         text2 = convertTextToType(text2);
-                        res = type(s, picture, text, text2, numberOfSeconds, doHighlightElement);
+                        res = type(s, picture, text, text2, numberOfSeconds, doHighlightElement, typeDelay);
                         LOG.info("Key done :'" + text + "' with modifier '" + text2 + "'");
                         if (1 == res) {
                             status = "OK";
                         }
                         break;
+
                     case "exists":
-                        if (s.exists(new Pattern(picture).similar(Double.parseDouble(minSimilarity))) != null) {
-                            status = "OK";
-                            // We found the picture so we can hightlight it.
-                            if (doHighlightElement) {
-                                LOG.debug("Highlighting Element.");
-                                s.find(picture).highlight(numberOfSeconds);
+                        if (!"".equals(picture)) {
+                            // PICTURE
+                            if (s.exists(new Pattern(picture).similar(minSimilarity)) != null) {
+                                status = "OK";
+                                // We found the picture so we can hightlight it.
+                                if (doHighlightElement) {
+                                    LOG.debug("Highlighting Element.");
+                                    s.find(picture).highlight(numberOfSeconds);
+                                }
                             }
+                        } else {
+                            // TEXT
+                            if (s.existsText(text) != null) {
+                                status = "OK";
+                                // We found the picture so we can hightlight it.
+                                if (doHighlightElement) {
+                                    LOG.debug("Highlighting Element.");
+                                    s.findText(text).highlight(numberOfSeconds);
+                                }
+                            }
+
                         }
+
                         break;
+
                     case "notExists":
-                        if (s.exists(picture) != null) {
-                            status = "KO";
-                            // We found the picture so we can hightlight it.
-                            if (doHighlightElement) {
-                                LOG.debug("Highlighting Element.");
-                                s.find(picture).highlight(numberOfSeconds);
+                        // PICTURE
+                        if (!"".equals(picture)) {
+                            if (s.exists(new Pattern(picture).similar(minSimilarity)) != null) {
+                                status = "KO";
+                                // We found the picture so we can hightlight it.
+                                if (doHighlightElement) {
+                                    LOG.debug("Highlighting Element.");
+                                    s.find(picture).highlight(numberOfSeconds);
+                                }
+                            }
+                            // TEXT
+                        } else {
+                            if (s.existsText(text) != null) {
+                                status = "KO";
+                                // We found the picture so we can hightlight it.
+                                if (doHighlightElement) {
+                                    LOG.debug("Highlighting Element.");
+                                    s.find(picture).highlight(numberOfSeconds);
+                                }
                             }
                         }
                         break;
+
                     case "findText":
                         Settings.OcrTextSearch = true;
                         Settings.OcrTextRead = true;
@@ -383,11 +396,13 @@ public class SikuliAction {
                             status = "OK";
                         }
                         break;
+
                     case "capture":
                         String screenshotInBase64 = getScreenshotInBase64(rootPictureFolder);
                         status = "OK";
                         result.put("screenshot", screenshotInBase64);
                         break;
+
                     case "endExecution":
                         /**
                          * The aim of that action is to put back the status of
@@ -453,7 +468,38 @@ public class SikuliAction {
         return result;
     }
 
-    private int type(Screen s, String picture, String text, String text2, int numberOfSeconds, boolean highlightElement) throws FindFailed {
+    private String getMessageWitthOffset(String message, Region region, int xOffset, int yOffset, Double minSimilarity) {
+        String extraMessage1 = "";
+        if (region == null) {
+            extraMessage1 = "";
+        } else {
+            extraMessage1 = "Element (" + region.getCenter().getX() + "," + region.getCenter().getY() + ")";
+        }
+        String extraMessage2 = "";
+        if (xOffset == 0 && yOffset == 0) {
+            extraMessage2 = "";
+        } else {
+            extraMessage2 = "Offset (" + xOffset + "," + yOffset + ")";
+        }
+        String extraMessage3 = "";
+        if (minSimilarity != null) {
+            extraMessage3 = "Similarity (" + minSimilarity + ")";
+        }
+        if (!extraMessage1.equals("")) {
+            message = message + " - " + extraMessage1;
+        }
+        if (!extraMessage2.equals("")) {
+            message = message + " - " + extraMessage2;
+        }
+        if (!extraMessage3.equals("")) {
+            message = message + " - " + extraMessage3;
+        }
+        return message;
+    }
+
+    private int type(Screen s, String picture, String text, String text2, int numberOfSeconds, boolean highlightElement, Double typeDelay) throws FindFailed {
+        LOG.info("Setting Type Delay to : " + typeDelay);
+        Settings.TypeDelay = typeDelay;
         int result = 0;
         if (!"".equals(picture)) {
             if (highlightElement) {

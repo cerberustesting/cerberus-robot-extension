@@ -35,6 +35,8 @@ import org.sikuli.script.FindFailed;
 public class ExecuteSikuliAction extends HttpServlet {
 
     private static final Logger LOG = LogManager.getLogger(ExecuteSikuliAction.class);
+    private static final String TYPEDELAY_DEFAULT = "0.1";
+    private static final String MINSIMILARITY_DEFAULT = "0.7";
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -130,18 +132,62 @@ public class ExecuteSikuliAction extends HttpServlet {
                     extension2 = obj.getString("picture2Extension");
                 }
 
-                String minSimilarity = null;
+                String minSimilarity = MINSIMILARITY_DEFAULT;
+                Double minSimilarityD = Double.valueOf(minSimilarity);
                 if (obj.has("minSimilarity")) {
                     if (!obj.getString("minSimilarity").trim().equals("")) {
                         minSimilarity = obj.getString("minSimilarity");
+                        try {
+                            minSimilarityD = Double.valueOf(minSimilarity);
+                            LOG.debug("Setting minSimilarity to : " + minSimilarity);
+                        } catch (NumberFormatException e) {
+                            minSimilarityD = Double.valueOf(MINSIMILARITY_DEFAULT);
+                            LOG.error("minSimilarity parameter format is not valid : " + minSimilarity + " - Should be in double format (ex : 0.7). Value default to " + MINSIMILARITY_DEFAULT);
+                        }
                     }
+                } else {
+                    LOG.info("minSimilarity parameter format is not defined. Value default to " + MINSIMILARITY_DEFAULT);
                 }
+
+                String typeDelay = TYPEDELAY_DEFAULT;
+                Double typeDelayD = Double.valueOf(typeDelay);
+                if (obj.has("typeDelay")) {
+                    if (!obj.getString("typeDelay").trim().equals("")) {
+                        typeDelay = obj.getString("typeDelay");
+                        try {
+                            typeDelayD = Double.valueOf(typeDelay);
+                            LOG.debug("Setting typeDelay to : " + typeDelay);
+                        } catch (NumberFormatException e) {
+                            typeDelayD = Double.valueOf(TYPEDELAY_DEFAULT);
+                            LOG.error("typeDelay parameter format is not valid : " + typeDelay + " - Should be in double format (ex : 0.1). Value default to " + TYPEDELAY_DEFAULT);
+                        }
+                    }
+                } else {
+                    LOG.info("typeDelay parameter format is not defined. Value default to " + TYPEDELAY_DEFAULT);
+                }
+
                 int highlightElement = 0;
                 if (obj.has("highlightElement")) {
                     if (!obj.getString("highlightElement").trim().equals("")) {
                         String sHighlightElement = obj.getString("highlightElement");
                         highlightElement = Integer.valueOf(sHighlightElement);
                     }
+                }
+                int xOffset = 0;
+                if (obj.has("xOffset")) {
+                    xOffset = obj.getInt("xOffset");
+                }
+                int yOffset = 0;
+                if (obj.has("yOffset")) {
+                    yOffset = obj.getInt("yOffset");
+                }
+                int xOffset2 = 0;
+                if (obj.has("xOffset2")) {
+                    xOffset2 = obj.getInt("xOffset2");
+                }
+                int yOffset2 = 0;
+                if (obj.has("yOffset2")) {
+                    yOffset2 = obj.getInt("yOffset2");
                 }
 
                 /**
@@ -176,6 +222,8 @@ public class ExecuteSikuliAction extends HttpServlet {
                     }
                     //Update logPictureInfo with that info
                     logPictureInfo = ": on picture " + picturePath;
+                } else if (!"".equals(text)) {
+                    logPictureInfo = ": on text '" + text + "'";
                 }
 
                 String picture2Path = "";
@@ -198,6 +246,8 @@ public class ExecuteSikuliAction extends HttpServlet {
                     }
                     //Update logPictureInfo with that info
                     logPictureInfo += " and picture " + picture2Path;
+                } else if (!"".equals(text2)) {
+                    logPictureInfo += ": and text '" + text2 + "'";
                 }
 
                 LOG.info("Executing: [" + action + logPictureInfo + "]");
@@ -216,7 +266,7 @@ public class ExecuteSikuliAction extends HttpServlet {
                 int i = 0;
                 while (System.currentTimeMillis() < end_time && i++ < 500) {
                     try {
-                        actionResult = sikuliAction.doAction(action, picturePath, picture2Path, text, text2, minSimilarity, highlightElement, rootPictureFolder);
+                        actionResult = sikuliAction.doAction(action, picturePath, picture2Path, text, text2, minSimilarityD, typeDelayD, highlightElement, rootPictureFolder, xOffset, yOffset, xOffset2, yOffset2);
                         if (actionResult.toString().length() > 300) {
                             LOG.debug("JSON Result from Action : " + actionResult.toString().substring(0, 300) + "...");
                         } else {
@@ -283,7 +333,10 @@ public class ExecuteSikuliAction extends HttpServlet {
                 /**
                  * Log and return actionResult
                  */
-                LOG.info(actionResult.get("status") + " [" + action + logPictureInfo + "] finish with result:" + actionResult.get("status"));
+                LOG.info("[" + action + logPictureInfo + "] finish with result: " + actionResult.get("status"));
+                if (action.equals("endExecution")) {
+                    LOG.info("----------------------------------------------------------------------");
+                }
                 os.println(actionResult.toString());
                 os.println("|ENDR|");
 
