@@ -45,15 +45,14 @@ public class callServlet {
             con.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
 
             //String urlParameters = "sn=C02G8416DRJM&cn=&locale=&caller=&num=12345";
-            
             URL urlPicture = new URL("file:///C:/Users/bcivel/Documents/Selenium.sikuli/1441615900282.png");
-        InputStream istream = urlPicture.openStream();
-        byte[] bytes = IOUtils.toByteArray(istream);
-        String imageDataString = Base64.encodeBase64URLSafeString(bytes);
-        
+            InputStream istream = urlPicture.openStream();
+            byte[] bytes = IOUtils.toByteArray(istream);
+            String imageDataString = Base64.encodeBase64URLSafeString(bytes);
+
             JSONObject object = new JSONObject();
             object.put("action", "click");
-            object.put("picture",imageDataString );
+            object.put("picture", imageDataString);
 
             // Send post request
             con.setDoOutput(true);
@@ -63,7 +62,7 @@ public class callServlet {
 //            wr.writeBytes("|ENDS|");
 //            wr.flush();
 //            wr.close();
-            os.println(object.toString()); 
+            os.println(object.toString());
             os.println("|ENDS|");
 
             int responseCode = con.getResponseCode();

@@ -36,31 +36,28 @@ public class sendMessage {
         try {
             Socket clientSocket = new Socket("localhost", 9001);
             BufferedReader br = new BufferedReader(new InputStreamReader(
-                clientSocket.getInputStream()));
+                    clientSocket.getInputStream()));
             PrintStream os = new PrintStream(clientSocket.getOutputStream());
-            
-            JSONObject obj=new JSONObject();
-            obj.put("action","click");
+
+            JSONObject obj = new JSONObject();
+            obj.put("action", "click");
             obj.put("picture", "C:/Users/bcivel/Documents/Selenium.sikuli/1440785043698.png");
-            
-            os.println(obj.toString()); 
-            os.println("|ENDS|"); 
-            System.out.println("["+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date())+"] Sent");
-            
-            
-            
+
+            os.println(obj.toString());
+            os.println("|ENDS|");
+            System.out.println("[" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()) + "] Sent");
+
             String responseLine;
-                while (!(responseLine = br.readLine()).equals("|ENDR|")){
-                    System.out.println("Server: " + responseLine);
-                    }
-                
+            while (!(responseLine = br.readLine()).equals("|ENDR|")) {
+                System.out.println("Server: " + responseLine);
+            }
+
 // clean up:
 // close the output stream
 // close the input stream
 // close the socket
-        
-                br.close();
-                clientSocket.close();   
+            br.close();
+            clientSocket.close();
         } catch (UnknownHostException e) {
             System.out.println("Unknown host: kq6py");
         } catch (IOException e) {

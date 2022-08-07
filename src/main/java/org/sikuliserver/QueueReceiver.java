@@ -5,6 +5,7 @@
  */
 package org.sikuliserver;
 
+import org.sikuliserver.sikuli.ExecuteSikuliAction;
 import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -21,6 +22,8 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
+import org.sikuliserver.filemanagement.ExecuteFilemanagementAction;
+import org.sikuliserver.management.ExecuteManagementAction;
 import org.sikuliserver.version.Infos;
 
 /**
@@ -118,6 +121,10 @@ public class QueueReceiver {
             server.setHandler(servletHandler);
             servletHandler.addServletWithMapping(ExecuteSikuliAction.class, "/extra/ExecuteSikuliAction");
             LOG.info("Servlet listening on : /extra/ExecuteSikuliAction");
+            servletHandler.addServletWithMapping(ExecuteFilemanagementAction.class, "/extra/ExecuteFilemanagementAction");
+            LOG.info("Servlet listening on : /extra/ExecuteFilemanagementAction");
+            servletHandler.addServletWithMapping(ExecuteManagementAction.class, "/extra/ExecuteManagementAction");
+            LOG.info("Servlet listening on : /extra/ExecuteManagementAction");
 
             server.start();
             server.join();
@@ -129,7 +136,13 @@ public class QueueReceiver {
     }
 
     private static void setLogLevelToDebug() {
-        Configurator.setLevel(System.getProperty("log4j.logger"), Level.DEBUG);
+        Logger logger = LogManager.getRootLogger();
+        LOG.info(System.getProperty("log4j.logger"));
+        LOG.info(logger.getName());
+        Configurator.setAllLevels(logger.getName(), Level.DEBUG);
+        Configurator.setLevel(LOG.getName(), Level.DEBUG);
+        Configurator.setAllLevels(logger.getName(), Level.DEBUG);
+//        Configurator.setLevel(System.getProperty("log4j.logger"), Level.DEBUG);
         LOG.debug("Debug mode enabled");
     }
 

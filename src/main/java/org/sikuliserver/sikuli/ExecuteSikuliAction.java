@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.sikuliserver;
+package org.sikuliserver.sikuli;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -255,6 +255,7 @@ public class ExecuteSikuliAction extends HttpServlet {
                 JSONObject actionResult = new JSONObject();
                 actionResult.put("status", "Failed");
                 SikuliAction sikuliAction = new SikuliAction();
+                
                 boolean breakOccured = false;
                 boolean errorOccured = false;
                 String message = null;
