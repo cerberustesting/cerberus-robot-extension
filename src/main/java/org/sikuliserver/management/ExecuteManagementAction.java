@@ -41,20 +41,15 @@ public class ExecuteManagementAction extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        /**
-         * Check if picture folder exists to store the picture. If not, create
-         * it.
-         */
-
-        // Forcing a garbage collection
-        System.gc();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF8");
 
         PrintStream os = null;
         BufferedReader is = null;
         StringBuilder sb = new StringBuilder();
 
         try {
-            LOG.info("Received: [Request from " + request.getServerName() + "]");
+            LOG.info("Received ExecuteManagementAction: [Request from {}]", request.getServerName());
 
             /**
              * Get input information until the syntax |ENDS| is received Input
@@ -66,14 +61,14 @@ public class ExecuteManagementAction extends HttpServlet {
 
             //continue if BufferReader is not null, 
             //else, print message
-            if (is.ready()) {
+//            if (is.ready()) {
 
                 os = new PrintStream(response.getOutputStream());
                 String line = "";
 
                 Infos infos = new Infos();
                 LOG.debug("Start reading InputStream");
-                while (!(line = is.readLine()).equals("|ENDS|")) {
+                while ((line = is.readLine()) != null) {
                     sb.append(line);
                 }
 
@@ -89,8 +84,9 @@ public class ExecuteManagementAction extends HttpServlet {
 
                 actionResult.put("version", infos.getProjectNameAndVersion());
                 actionResult.put("buildid", infos.getProjectBuildId());
-                actionResult.put("java.prop.log4j.logger", System.getProperty("log4j.logger"));
-                actionResult.put("java.prop.java.io.tmpdir", System.getProperty("java.io.tmpdir"));
+                actionResult.put("java.prop-log4j.logger", System.getProperty("log4j.logger"));
+                actionResult.put("java.prop-java.io.tmpdir", System.getProperty("java.io.tmpdir"));
+                actionResult.put("java.prop-authorisedFolderScope", System.getProperty("authorisedFolderScope"));
 
                 actionResult.put("javaVersion", System.getProperty("java.version"));
                 Runtime instance = Runtime.getRuntime();
@@ -107,21 +103,19 @@ public class ExecuteManagementAction extends HttpServlet {
                  * Log and return actionResult
                  */
                 os.println(actionResult.toString(1));
-                os.println("|ENDR|");
 
                 is.close();
                 os.close();
 
-            } else {
-                LOG.info("ExecuteManagementAction is up and running. Waiting for requests from Cerberus");
-                response.getWriter().print("ExecuteManagementAction is up and running. Waiting for requests from Cerberus");
-            }
+//            } else {
+//                LOG.info("ExecuteManagementAction is up and running. Waiting for requests from Cerberus");
+//                response.getWriter().print("ExecuteManagementAction is up and running. Waiting for requests from Cerberus");
+//            }
 
         } catch (JSONException ex) {
             LOG.warn("JSON Exception : " + ex, ex);
             if (os != null) {
                 os.println("{\"status\" : \"Failed\", \"message\" : \"Unsupported request to Extension\"}");
-                os.println("|ENDR|");
             }
         } catch (Exception ex) {
             LOG.error("Exception : " + ex);
@@ -137,7 +131,6 @@ public class ExecuteManagementAction extends HttpServlet {
                     result.put("message", message);
                     result.put("stacktrace", stacktrace);
                     os.println(result.toString());
-                    os.println("|ENDR|");
                 }
             } catch (JSONException ex1) {
                 LOG.error(ex1, ex1);

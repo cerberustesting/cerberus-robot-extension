@@ -5,6 +5,7 @@
  */
 package org.sikuliserver;
 
+import java.io.File;
 import org.sikuliserver.sikuli.ExecuteSikuliAction;
 import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
@@ -38,6 +39,8 @@ public class QueueReceiver {
 
         try {
 
+            Infos infos = new Infos();
+
             /**
              * Parse Arguments
              */
@@ -55,6 +58,10 @@ public class QueueReceiver {
             highlight.setRequired(false);
             options.addOption(highlight);
 
+            Option authorisedFolderScope = new Option("a", "authorisedFolderScope", true, "Limit the scope of manipulation of files on the given folder>");
+            authorisedFolderScope.setRequired(false);
+            options.addOption(authorisedFolderScope);
+
             Option help = new Option("h", "help", false, "Display the help message");
             help.setRequired(false);
             options.addOption(help);
@@ -67,7 +74,7 @@ public class QueueReceiver {
                 cmd = parser.parse(options, args);
             } catch (ParseException e) {
                 System.out.println(e.getMessage());
-                formatter.printHelp("utility-name", options);
+                formatter.printHelp(infos.getProjectNameAndVersion(), options);
 
                 System.exit(1);
                 return;
@@ -93,14 +100,37 @@ public class QueueReceiver {
              */
             if (cmd.hasOption("highlightElement")) {
                 System.setProperty("highlightElement", cmd.getOptionValue("highlightElement"));
-                LOG.info("Set HighlightElement parameter to " + cmd.getOptionValue("highlightElement") + " seconds");
+                LOG.info("Set highlightElement parameter to " + cmd.getOptionValue("highlightElement") + " seconds");
+            }
+            /**
+             * Set Authorised Folder Scope if specified
+             */
+            if (cmd.hasOption("authorisedFolderScope")) {
+                System.setProperty("authorisedFolderScope", cmd.getOptionValue("authorisedFolderScope"));
+                LOG.info("Set authorisedFolderScope parameter to " + cmd.getOptionValue("authorisedFolderScope"));
+            }
+            String sauthorisedFolderScope = System.getProperty("authorisedFolderScope");
+            if (sauthorisedFolderScope == null || "".equals(sauthorisedFolderScope)) {
+                sauthorisedFolderScope = "";
+                if (System.getProperty("java.io.tmpdir") != null) {
+                    sauthorisedFolderScope = System.getProperty("java.io.tmpdir");
+                } else {
+                    String sep = "" + File.separatorChar;
+                    if (sep.equalsIgnoreCase("/")) {
+                        sauthorisedFolderScope = "/tmp";
+                    } else {
+                        sauthorisedFolderScope = "C:";
+                    }
+                    LOG.warn("Java Property (java.io.tmpdir) for temporary folder not defined. Default to :" + sauthorisedFolderScope);
+                }
+                System.setProperty("authorisedFolderScope", sauthorisedFolderScope);
             }
 
             /**
              * Display help if -h present
              */
             if (cmd.hasOption("help")) {
-                formatter.printHelp("utility-name", options);
+                formatter.printHelp(infos.getProjectNameAndVersion(), options);
                 System.exit(1);
                 return;
             }
@@ -108,7 +138,6 @@ public class QueueReceiver {
             /*
              * Start the server
              */
-            Infos infos = new Infos();
             LOG.info(infos.getProjectNameAndVersion() + " - Build " + infos.getProjectBuildId() + " - Http Server Launching on port : " + portParam);
             Server server = new Server();
 
@@ -122,7 +151,7 @@ public class QueueReceiver {
             servletHandler.addServletWithMapping(ExecuteSikuliAction.class, "/extra/ExecuteSikuliAction");
             LOG.info("Servlet listening on : /extra/ExecuteSikuliAction");
             servletHandler.addServletWithMapping(ExecuteFilemanagementAction.class, "/extra/ExecuteFilemanagementAction");
-            LOG.info("Servlet listening on : /extra/ExecuteFilemanagementAction");
+            LOG.info("Servlet listening on : /extra/ExecuteFilemanagementAction | Limited to scope : '{}'", System.getProperty("authorisedFolderScope"));
             servletHandler.addServletWithMapping(ExecuteManagementAction.class, "/extra/ExecuteManagementAction");
             LOG.info("Servlet listening on : /extra/ExecuteManagementAction");
 
@@ -137,8 +166,6 @@ public class QueueReceiver {
 
     private static void setLogLevelToDebug() {
         Logger logger = LogManager.getRootLogger();
-        LOG.info(System.getProperty("log4j.logger"));
-        LOG.info(logger.getName());
         Configurator.setAllLevels(logger.getName(), Level.DEBUG);
         Configurator.setLevel(LOG.getName(), Level.DEBUG);
         Configurator.setAllLevels(logger.getName(), Level.DEBUG);

@@ -53,7 +53,7 @@ public class SikuliAction {
             try {
                 numberOfSeconds = Integer.valueOf(System.getProperty("highlightElement"));
             } catch (Exception ex) {
-                LOG.warn("Exception parsing highlightElement argument : " + ex);
+                LOG.warn("Exception parsing highlightElement argument : " + ex, ex);
             }
         }
         if (numberOfSecondsHighlightElement > numberOfSeconds) {
@@ -79,6 +79,10 @@ public class SikuliAction {
             try {
                 switch (action) {
 
+                    case "ping":
+                        LOG.info("Ping.");
+                        status = "OK";
+                        break;
                     case "openApp":
                         LOG.info("Opening Application : " + text);
                         App app = new App(text);

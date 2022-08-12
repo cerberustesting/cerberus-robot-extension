@@ -57,14 +57,20 @@ public class ExecuteFilemanagementAction extends HttpServlet {
         PrintStream os = null;
         BufferedReader is = null;
 
+        // Limit scope of action to this folder
+        String authorisedFolderScope = System.getProperty("authorisedFolderScope");
+
         try {
+
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF8");
 
             JSONObject actionResult = new JSONObject();
             actionResult.put("status", "OK");
 
             StringBuilder sb = new StringBuilder();
 
-            LOG.info("Received: [Request from " + request.getServerName() + "]");
+            LOG.info("Received ExecuteFilemanagementAction: [Request from {}] | Scope limited to {}", request.getServerName(), authorisedFolderScope);
 
             /**
              * Get input information until the syntax |ENDS| is received Input
@@ -76,101 +82,108 @@ public class ExecuteFilemanagementAction extends HttpServlet {
 
             //continue if BufferReader is not null, 
             //else, print message
-            if (is.ready()) {
+//            if (is.ready()) {
+            os = new PrintStream(response.getOutputStream());
+            String line = "";
 
-                os = new PrintStream(response.getOutputStream());
-                String line = "";
-
-                LOG.debug("Start reading InputStream");
-                while (!(line = is.readLine()).equals("|ENDS|")) {
-                    sb.append(line);
-                }
-
-                /**
-                 * Convert String into JSONObject
-                 */
-                LOG.debug("InputStream : " + sb.toString());
-
-                JSONObject obj = new JSONObject(sb.toString());
-
-                String action = obj.getString("action");
-
-                LOG.info("Executing: [" + action + "]");
-                String path = "";
-                String filename = "";
-                String opt = "";
-                String contentBase64 = "";
-                File pathDir;
-                switch (action) {
-                    case "upload":
-                        /**
-                         * We get content of the file in Baase64 format, write
-                         * it to a file, optionaly purge the corresponding
-                         * folder before.
-                         */
-                        if (obj.has("path")) {
-                            path = obj.getString("path");
-                        }
-                        if (obj.has("filename")) {
-                            filename = obj.getString("filename");
-                        }
-                        if (obj.has("option")) {
-                            opt = obj.getString("option");
-                        }
-                        if (obj.has("contentBase64")) {
-                            contentBase64 = obj.getString("contentBase64");
-                        }
-                        LOG.info("Saving local file '{}' to path '{}' with option '{}'.", filename, path, opt);
-                        actionResult = upload_files(path, filename, opt, contentBase64);
-
-                        break;
-                    case "download":
-                        /**
-                         * We get local content of the file in Baase64 format,
-                         * It could be the last file generated.
-                         */
-                        if (obj.has("path")) {
-                            path = obj.getString("path");
-                        }
-                        if (obj.has("option")) {
-                            opt = obj.getString("option");
-                        }
-                        int nbfiles = 1;
-                        if (obj.has("nbfiles")) {
-                            nbfiles = obj.getInt("nbfiles");
-                        }
-                        if (obj.has("filename")) {
-                            filename = obj.getString("filename");
-                        }
-                        LOG.info("Getting {} local file(s) '{}' from path '{}' with option '{}'.", nbfiles, filename, path, opt);
-                        actionResult = download_files(path, opt, nbfiles, filename);
-
-                        break;
-                    default:
-                        actionResult.put("status", "Failed");
-                        actionResult.put("message", "Unknown or mising action '" + action + "'");
-                }
-
-                /**
-                 * Log and return actionResult
-                 */
-                LOG.info("[" + action + "] finish with result: " + actionResult.get("status"));
-                os.println(actionResult.toString(1));
-                os.println("|ENDR|");
-
-                is.close();
-                os.close();
-
-            } else {
-                LOG.info("ExecuteFilemanagementAction is up and running. Waiting for requests from Cerberus");
-                response.getWriter().print("ExecuteFilemanagementAction is up and running. Waiting for requests from Cerberus");
+            LOG.debug("Start reading InputStream");
+            while ((line = is.readLine()) != null) {
+                sb.append(line);
             }
 
+            /**
+             * Convert String into JSONObject
+             */
+            LOG.debug("InputStream : " + sb.toString());
+
+            JSONObject obj = new JSONObject(sb.toString());
+
+            String action = obj.getString("action");
+
+            LOG.info("Executing: [" + action + "]");
+            String path = "";
+            String filename = "";
+            String opt = "";
+            String contentBase64 = "";
+            File pathDir;
+            switch (action) {
+                case "cleanFolder":
+                    /**
+                     * We get content of the file in Baase64 format, write it to
+                     * a file, optionaly purge the corresponding folder before.
+                     */
+//                        if (obj.has("path")) {
+//                            path = obj.getString("path");
+//                        }
+                    if (obj.has("filename")) {
+                        filename = obj.getString("filename");
+                    }
+                    LOG.info("Cleaning files from '{}'.", filename);
+                    actionResult = clean_folder(filename, authorisedFolderScope);
+
+                    break;
+                case "upload":
+                    /**
+                     * We get content of the file in Baase64 format, write it to
+                     * a file, optionaly purge the corresponding folder before.
+                     */
+//                        if (obj.has("path")) {
+//                            path = obj.getString("path");
+//                        }
+                    if (obj.has("filename")) {
+                        filename = obj.getString("filename");
+                    }
+                    if (obj.has("contentBase64")) {
+                        contentBase64 = obj.getString("contentBase64");
+                    }
+                    if (obj.has("option")) {
+                        opt = obj.getString("option");
+                    }
+                    LOG.info("Saving local file to path '{}' with option '{}'.", filename, opt);
+                    actionResult = upload_files(filename, contentBase64, opt, authorisedFolderScope);
+
+                    break;
+                case "download":
+                    /**
+                     * We get local content of the file in Baase64 format, It
+                     * could be the last file generated.
+                     */
+                    if (obj.has("filename")) {
+                        filename = obj.getString("filename");
+                    }
+                    int nbfiles = 1;
+                    if (obj.has("nbFiles")) {
+                        nbfiles = obj.getInt("nbFiles");
+                    }
+                    if (obj.has("option")) {
+                        opt = obj.getString("option");
+                    }
+                    LOG.info("Getting {} local file(s) from '{}'.", nbfiles, filename);
+                    actionResult = download_files(filename, nbfiles, opt, authorisedFolderScope);
+
+                    break;
+                default:
+                    actionResult.put("status", "Failed");
+                    actionResult.put("message", "Unknown or mising action '" + action + "'");
+            }
+
+            /**
+             * Log and return actionResult
+             */
+            LOG.info("[" + action + "] finish with result: " + actionResult.get("status"));
+            os.println(actionResult.toString(1));
+
+            is.close();
+            os.close();
+
+//            } else {
+//                LOG.info("ExecuteFilemanagementAction is up and running. Waiting for requests from Cerberus");
+//                response.getWriter().print("ExecuteFilemanagementAction is up and running. Waiting for requests from Cerberus");
+//            }
         } catch (JSONException ex) {
             LOG.warn("JSON Exception : " + ex, ex);
             if (os != null) {
                 os.println("{\"status\" : \"Failed\", \"message\" : \"Unsupported request to Extension\"}");
-                os.println("|ENDR|");
             }
         } catch (Exception ex) {
             LOG.error("Exception : " + ex, ex);
@@ -185,8 +198,7 @@ public class ExecuteFilemanagementAction extends HttpServlet {
                     result.put("status", "Failed");
                     result.put("message", message);
                     result.put("stacktrace", stacktrace);
-                    os.println(result.toString());
-                    os.println("|ENDR|");
+                    os.println(result.toString(1));
                 }
             } catch (JSONException ex1) {
                 LOG.error(ex1, ex1);
@@ -209,13 +221,31 @@ public class ExecuteFilemanagementAction extends HttpServlet {
         }
     }
 
-    private JSONObject upload_files(String path, String filename, String opt, String contentBase64) throws JSONException, IOException {
+    private JSONObject upload_files(String filenamecomplete, String contentBase64, String opt, String authorisedFolderScope) throws JSONException, IOException {
         JSONObject actionResult = new JSONObject();
-        if (!contentBase64.isEmpty()) {
+
+        File file = new File(filenamecomplete);
+        File pathDir;
+        String filename;
+        if (file.isFile()) {
+            pathDir = file.getParentFile();
+            filename = file.getName();
+        } else if (file.isDirectory()) {
+            pathDir = file;
+            filename = "";
+        } else {
+            pathDir = file.getParentFile();
+            filename = file.getName();
+        }
+
+        if (!check_authorisation(pathDir, authorisedFolderScope)) {
+            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' is not authorised !! The path is not inside '" + authorisedFolderScope + "'.");
+            actionResult.put("status", "Failed");
+            actionResult.put("code", 403);
+        } else {
             // We create the folder that will host the file if it does not exist.
-            File pathDir = new File(path);
             if (!pathDir.exists()) {
-                LOG.info("Path '{}' does not exist. We create it.");
+                LOG.info("Path '{}' does not exist. We create it.", pathDir.toString());
                 pathDir.mkdirs();
             } else {
                 if ("EMPTYFOLDER".equals(opt)) {
@@ -229,28 +259,93 @@ public class ExecuteFilemanagementAction extends HttpServlet {
                 }
             }
             // We delete the file if it exist.
-            File fileToCreate = new File(path + File.separator + filename);
-            if (fileToCreate.exists()) {
-                fileToCreate.delete();
+            if (file.exists()) {
+                file.delete();
             }
-            byte[] fileContent = Base64.decodeBase64(contentBase64);
-            Files.write(fileToCreate.toPath(), fileContent);
-            actionResult.put("message", "File '" + fileToCreate.getAbsolutePath() + "' created with total size : " + fileToCreate.length() + " b");
+            byte[] fileContent = new byte[0];
+            if (!contentBase64.isEmpty()) {
+                fileContent = Base64.decodeBase64(contentBase64);
+            }
+            Files.write(file.toPath(), fileContent);
+            actionResult.put("message", "File '" + file.getAbsolutePath() + "' created with total size : " + file.length() + " b");
             actionResult.put("status", "OK");
+            actionResult.put("code", 200);
         }
         return actionResult;
     }
 
-    ;
-    
-
-    private JSONObject download_files(String path, String opt, int nbfiles, String filename) throws JSONException, IOException {
+    private JSONObject clean_folder(String filenamecomplete, String authorisedFolderScope) throws JSONException, IOException {
         JSONObject actionResult = new JSONObject();
 
-        File pathDir = new File(path);
+        File file = new File(filenamecomplete);
+        File pathDir;
+        String filename;
+        if (file.isFile()) {
+            pathDir = file.getParentFile();
+            filename = file.getName();
+        } else if (file.isDirectory()) {
+            pathDir = file;
+            filename = "";
+        } else {
+            pathDir = file.getParentFile();
+            filename = file.getName();
+        }
+
         if (!pathDir.exists()) {
-            actionResult.put("message", "Path '" + path + "' does not exist !! Please specify aa valid path.");
+            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' does not exist !! Please specify a valid path.");
             actionResult.put("status", "Failed");
+            actionResult.put("code", 400);
+        } else if (!check_authorisation(pathDir, authorisedFolderScope)) {
+            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' is not authorised !! The path '" + pathDir.toPath().toRealPath().toString() + File.separator + "' is not inside '" + authorisedFolderScope + "'.");
+            actionResult.put("status", "Failed");
+            actionResult.put("code", 403);
+        } else {
+            // Get all files.
+            File[] rawfiles;
+            if (!"".equals(filename)) {
+                FileFilter fileFilter = new WildcardFileFilter(filename);
+                rawfiles = pathDir.listFiles(fileFilter);
+            } else {
+                rawfiles = pathDir.listFiles();
+            }
+            int i = 0;
+            for (File rawfile : rawfiles) {
+                rawfile.delete();
+                i++;
+            }
+            actionResult.put("totalFilesDeleted", i);
+            actionResult.put("message", i + " file(s) from '" + filenamecomplete + "' deleted sucessfuly.");
+            actionResult.put("status", "OK");
+            actionResult.put("code", 200);
+        }
+        return actionResult;
+    }
+
+    private JSONObject download_files(String filenamecomplete, int nbfiles, String opt, String authorisedFolderScope) throws JSONException, IOException {
+        JSONObject actionResult = new JSONObject();
+
+        File file = new File(filenamecomplete);
+        File pathDir;
+        String filename;
+        if (file.isFile()) {
+            pathDir = file.getParentFile();
+            filename = file.getName();
+        } else if (file.isDirectory()) {
+            pathDir = file;
+            filename = "";
+        } else {
+            pathDir = file.getParentFile();
+            filename = file.getName();
+        }
+
+        if (!pathDir.exists()) {
+            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' does not exist !! Please specify a valid path.");
+            actionResult.put("status", "Failed");
+            actionResult.put("code", 400);
+        } else if (!check_authorisation(pathDir, authorisedFolderScope)) {
+            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' is not authorised !! The path '" + pathDir.toPath().toRealPath().toString() + File.separator + "' is not inside '" + authorisedFolderScope + "'.");
+            actionResult.put("status", "Failed");
+            actionResult.put("code", 403);
         } else {
             // Get all files.
             File[] rawfiles;
@@ -270,17 +365,45 @@ public class ExecuteFilemanagementAction extends HttpServlet {
 
             if (files.isEmpty()) {
                 actionResult.put("status", "Failed");
+                actionResult.put("code", 400);
                 if (!"".equals(filename)) {
-                    actionResult.put("message", "Path '" + path + "' does not contain any file that match '" + filename + "' !!");
+                    actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' does not contain any file that match '" + filename + "' !!");
                 } else {
-                    actionResult.put("message", "Path '" + path + "' is empty or only contains folders !!");
+                    actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' is empty or only contains folders !!");
                 }
             } else {
-                Collections.sort(files, new Comparator<File>() {
-                    public int compare(File o1, File o2) {
-                        return new Long(o2.lastModified()).compareTo(o1.lastModified());
-                    }
-                });
+                if ("LASMODIFIED".equals(opt)) {
+                    Collections.sort(files, new Comparator<File>() {
+                        public int compare(File o1, File o2) {
+                            return new Long(o2.lastModified()).compareTo(o1.lastModified());
+                        }
+                    });
+                } else if ("IGNORECASEDESC".equals(opt)) {
+                    Collections.sort(files, new Comparator<File>() {
+                        public int compare(File o1, File o2) {
+                            return o2.getName().compareToIgnoreCase(o1.getName());
+                        }
+                    });
+                } else if ("IGNORECASEASC".equals(opt)) {
+                    Collections.sort(files, new Comparator<File>() {
+                        public int compare(File o1, File o2) {
+                            return o1.getName().compareToIgnoreCase(o2.getName());
+                        }
+                    });
+                } else if ("DESC".equals(opt)) {
+                    Collections.sort(files, new Comparator<File>() {
+                        public int compare(File o1, File o2) {
+                            return o2.getName().compareTo(o1.getName());
+                        }
+                    });
+                } else {
+                    // "ASC" and default value.
+                    Collections.sort(files, new Comparator<File>() {
+                        public int compare(File o1, File o2) {
+                            return o1.getName().compareTo(o2.getName());
+                        }
+                    });
+                }
                 JSONArray resFiles = new JSONArray();
                 for (int i = 0; i < nbfiles; i++) {
                     if (i < files.size()) {
@@ -300,14 +423,32 @@ public class ExecuteFilemanagementAction extends HttpServlet {
                 actionResult.put("totalFilesAvailable", files.size());
                 actionResult.put("totalFilesDownloaded", resFiles.length());
                 actionResult.put("status", "OK");
+                actionResult.put("message", resFiles.length() + " file(s) retrieved successfully out of " + files.size() + " that was(were) available to download from '" + pathDir.getAbsolutePath() + "'.");
+                actionResult.put("code", 200);
             }
         }
         return actionResult;
     }
 
-    ;
-    
-    
+    boolean check_authorisation(File pathDir, String authorisedFolderScope) {
+        String pathToCheck;
+        try {
+            pathToCheck = pathDir.toPath().toRealPath().toString() + File.separator;
+            return pathToCheck.startsWith(authorisedFolderScope);
+        } catch (IOException ex) {
+            // PathDir could not exist. We should still guess if it is authorised.
+            if (pathDir.toString().contains("..")) {
+                LOG.warn("Path that do not exist should not include .. !! '{}'", pathDir.toString());
+                return false;
+            } else {
+                pathToCheck = pathDir.toPath().toString() + File.separator;
+                return pathToCheck.startsWith(authorisedFolderScope);
+            }
+//            LOG.error(ex, ex);
+//            return false;
+        }
+    }
+
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**
      * Handles the HTTP <code>GET</code> method.
