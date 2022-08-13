@@ -30,7 +30,7 @@
                     <!-- MainClass in mainfest make a executable jar -->
                     <archive>
                         <manifest>
-                            <mainClass>org.sikuliserver.QueueReceiver</mainClass>
+                            <mainClass>org.cerberus.robot.extension.QueueReceiver</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
