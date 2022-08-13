@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.sikuliserver;
+package org.cerberus.robot.extension;
 
 import java.io.File;
-import org.sikuliserver.sikuli.ExecuteSikuliAction;
+import org.cerberus.robot.extension.sikuli.ExecuteSikuliAction;
 import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -23,9 +23,9 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
-import org.sikuliserver.filemanagement.ExecuteFilemanagementAction;
-import org.sikuliserver.management.ExecuteManagementAction;
-import org.sikuliserver.version.Infos;
+import org.cerberus.robot.extension.filemanagement.ExecuteFilemanagementAction;
+import org.cerberus.robot.extension.management.ExecuteManagementAction;
+import org.cerberus.robot.extension.version.Infos;
 
 /**
  *

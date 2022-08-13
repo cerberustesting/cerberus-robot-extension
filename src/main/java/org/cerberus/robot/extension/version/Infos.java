@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Cerberus.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.sikuliserver.version;
+package org.cerberus.robot.extension.version;
 
 import java.io.IOException;
 import java.util.Properties;

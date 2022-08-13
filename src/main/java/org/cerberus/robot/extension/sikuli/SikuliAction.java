@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.sikuliserver.sikuli;
+package org.cerberus.robot.extension.sikuli;
 
 //import java.awt.MouseInfo;
 //import java.awt.Point;
 //import java.awt.PointerInfo;
-import org.sikuliserver.sikuli.KeyCodeEnum;
+import org.cerberus.robot.extension.sikuli.KeyCodeEnum;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,7 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.sikuli.script.*;
 import org.sikuli.basics.Settings;
-import static org.sikuliserver.sikuli.KeyCodeEnum.values;
+import static org.cerberus.robot.extension.sikuli.KeyCodeEnum.values;
 
 /**
  *

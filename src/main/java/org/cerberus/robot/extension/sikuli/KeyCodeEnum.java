@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.sikuliserver.sikuli;
+package org.cerberus.robot.extension.sikuli;
 
 import org.sikuli.script.Key;
 

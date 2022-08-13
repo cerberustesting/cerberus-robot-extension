@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.sikuliserver.management;
+package org.cerberus.robot.extension.management;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.sikuliserver.version.Infos;
+import org.cerberus.robot.extension.version.Infos;
 
 /**
  *
