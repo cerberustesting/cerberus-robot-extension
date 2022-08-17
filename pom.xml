@@ -6,18 +6,19 @@
     <version>1.7-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Cerberus Robot Extension</name>
+    
     <properties>
+        <!-- Maven properties -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
-        <!-- Maven properties -->
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyyMMdd'-'HHmmss</maven.build.timestamp.format>
         <ant-jsch.version>1.10.1</ant-jsch.version>
         <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
         <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
-
     </properties>
+    
     <build>
         <plugins>
             <plugin>
@@ -61,15 +62,19 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-           
         </plugins>
+        
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
+                <includes>
+                    <include>*.properties</include>
+                </includes>
             </resource>
         </resources>       
     </build>
+    
     <repositories>
         <repository>
             <id>sonatype-ossrh</id>
