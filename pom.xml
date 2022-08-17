@@ -13,6 +13,10 @@
         <!-- Maven properties -->
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyyMMdd'-'HHmmss</maven.build.timestamp.format>
+        <ant-jsch.version>1.10.1</ant-jsch.version>
+        <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
+        <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
+
     </properties>
     <build>
         <plugins>
@@ -45,11 +49,19 @@
                     </execution>
                 </executions>
             </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.3</version>
-                </plugin>              
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.3</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${maven-deploy-plugin.version}</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+           
         </plugins>
         <resources>
             <resource>
@@ -111,4 +123,68 @@
             <version>1.4</version>
         </dependency>
     </dependencies>
+    
+
+    <profiles>
+
+        <!--
+            Additional configuration for deployment process on the qualification server
+
+            /!\ Prerequisites: Beware to correctly declared the following properties into your Maven settings:
+                - cerberus.delivery.username, which is the Cerberus demonstration server's user
+                - cerberus.delivery.password, which is the Cerberus demonstration server's password
+        -->
+        <profile>
+            <id>delivery-deploy</id>
+            <properties>
+                <env>qa</env>
+                <cerberus.delivery.host>vm.cerberus-testing.org</cerberus.delivery.host>
+                <cerberus.delivery.upload.path>/opt/delivery</cerberus.delivery.upload.path>
+                <cerberus.delivery.tomcat.deploy>/opt/bin/deployQA-robot-extension.sh</cerberus.delivery.tomcat.deploy>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>${maven-antrun-plugin.version}</version>
+                        <executions>
+                            <!-- Upload built artifacts into our infra during the deploy phase -->
+                            <execution>
+                                <id>delivery-deploy</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <!-- Upload artifact -->
+                                        <echo message="Uploading artifact ${project.build.directory}/${project.build.finalName}-full.jar to Cerberus Delivery server..." />
+                                        <scp file="${project.build.directory}/${project.build.finalName}-full.jar" todir="${cerberus.delivery.username}@${cerberus.delivery.host}:${cerberus.delivery.upload.path}" password="${cerberus.delivery.password}" trust="yes" />
+                                        <!--
+                                            Deploy artifact by:
+                                                1. Extracting distribution package to the server's upload path;
+                                                2. Redeploying current application
+                                                3. Restarting current cluster.
+                                        -->
+                                        <echo message="Deploying to QA..." />
+                                        <sshexec host="${cerberus.delivery.host}" username="${cerberus.delivery.username}" password="${cerberus.delivery.password}" trust="yes" command="${cerberus.delivery.tomcat.deploy} ${cerberus.delivery.upload.path}/${project.build.finalName}-full.jar" />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.ant</groupId>
+                                <artifactId>ant-jsch</artifactId>
+                                <version>${ant-jsch.version}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+    </profiles>    
+    
+    
 </project>
