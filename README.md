@@ -1,4 +1,4 @@
-# cerberus-extension-sikuli
+# cerberus-robot-extension
 
 This project allow to use Cerberus (https://github.com/cerberustesting/cerberus-source) from version 1.2 with sikuli (http://www.sikuli.org) as a Selenium extension. This extension will extend the selenium server that will be used to run your script.
 
