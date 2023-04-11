@@ -10,6 +10,11 @@ LABEL authors=Cerberus
 
 USER root
 
+ARG CHROME_VERSION="google-chrome-stable"
+ARG CHROME_DRIVER_VERSION
+ARG VNC_PASSWORD=XXXXXXXX
+ARG CERBERUS_ROBOT_EXTENSION_VERSION=1.7.1
+
 #============================================
 # Google Chrome
 #============================================
@@ -20,7 +25,6 @@ USER root
 #       latest (equivalent to google-chrome-stable)
 #       google-chrome-beta  (pull latest beta)
 #============================================
-ARG CHROME_VERSION="google-chrome-stable"
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
   && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
   && apt-get update -qqy \
@@ -45,7 +49,6 @@ USER 1200
 # can specify versions by CHROME_DRIVER_VERSION
 # Latest released version will be used by default
 #============================================
-ARG CHROME_DRIVER_VERSION
 RUN if [ -z "$CHROME_DRIVER_VERSION" ]; \
   then CHROME_MAJOR_VERSION=$(google-chrome --version | sed -E "s/.* ([0-9]+)(\.[0-9]+){3}.*/\1/") \
     && CHROME_DRIVER_VERSION=$(wget --no-verbose -O - "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION}"); \
@@ -164,13 +167,11 @@ EXPOSE 5900
 #==============================
 # VNC Securisation - Don't forget to chage it ;-)
 #==============================
-ARG VNC_PASSWORD=XXXXXXXX
 RUN x11vnc -storepasswd $VNC_PASSWORD /home/seluser/.vnc/passwd
 
 #==============================
 # Cerberus Robot Extension
 #==============================
-ARG CERBERUS_ROBOT_EXTENSION_VERSION=1.7.1
 RUN  wget --no-verbose http://vm.cerberus-testing.org/delivery/cerberus-robot-extension-$CERBERUS_ROBOT_EXTENSION_VERSION.jar -O /opt/selenium/cerberus-robot-extension.jar
 
 USER root
