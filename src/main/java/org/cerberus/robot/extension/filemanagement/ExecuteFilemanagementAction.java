@@ -287,14 +287,14 @@ public class ExecuteFilemanagementAction extends HttpServlet {
             pathDir = file;
             filename = "";
         } else {
-            pathDir = file.getParentFile();
-            filename = file.getName();
+            pathDir = file;
+            filename = "";
         }
 
         if (!pathDir.exists()) {
-            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' does not exist !! Please specify a valid path.");
-            actionResult.put("status", "Failed");
-            actionResult.put("code", 400);
+            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' does not exist !! We consider it as empty/cleaned already...");
+            actionResult.put("status", "OK");
+            actionResult.put("code", 200);
         } else if (!check_authorisation(pathDir, authorisedFolderScope)) {
             actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' is not authorised !! The path '" + pathDir.toPath().toRealPath().toString() + File.separator + "' is not inside '" + authorisedFolderScope + "'.");
             actionResult.put("status", "Failed");
