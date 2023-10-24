@@ -24,7 +24,7 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: |
-        mvn --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn clean deploy -Pdelivery-deploy --file pom.xml
+        mvn --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn clean install --file pom.xml
     - name: Push file to core VM
       env:
         source-jar: 'target/*.jar'
