@@ -33,6 +33,5 @@ jobs:
         echo "${{secrets.DEPLOY_KEY}}" > deploy_key
         chmod 600 ./deploy_key
         sudo rsync -chav \
-          -e 'ssh -i ./deploy_key -o StrictHostKeyChecking=no' \
-          ${{env.source-jar}} ${{env.destination}}
-
+          -e 'ssh -i ./deploy_key -o StrictHostKeyChecking=no' ${{env.source-jar}} ${{env.destination}}
+        ssh  -i ./deploy_key -o StrictHostKeyChecking=no debian@vm.cerberus-testing.org /opt/bin/deployQA-robot-extension.sh
