@@ -12,9 +12,8 @@ on:
 
 jobs:
   build:
-
+    name: build and deploy
     runs-on: ubuntu-latest
-    
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 11
@@ -22,7 +21,18 @@ jobs:
       with:
         java-version: '11'
         distribution: 'adopt'
+        cache: maven
     - name: Build with Maven
       run: |
-        mvn -Dcerberus.delivery.username=${{secrets.CERBERUS_DELIVERY_USERNAME}} -Dcerberus.delivery.password=${{secrets.CERBERUS_DELIVERY_PASSWORD}} clean deploy -Pdelivery-deploy --file pom.xml
+        mvn --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn clean install --file pom.xml
+    - name: Push file to core VM
+      env:
+        source-jar: 'target/*.jar'
+        destination: 'debian@vm.cerberus-testing.org:/opt/delivery/'  
+      run: |
+        echo "${{secrets.DEPLOY_KEY}}" > deploy_key
+        chmod 600 ./deploy_key
+        sudo rsync -chav \
+          -e 'ssh -i ./deploy_key -o StrictHostKeyChecking=no' \
+          ${{env.source-jar}} ${{env.destination}}
 
