@@ -27,7 +27,7 @@ jobs:
         mvn --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn clean install --file pom.xml
     - name: Push file to core VM
       env:
-        source-jar: 'target/*.jar'
+        source-jar: 'target/*full.jar'
         destination: 'debian@vm.cerberus-testing.org:/opt/delivery/'  
       run: |
         echo "${{secrets.DEPLOY_KEY}}" > deploy_key
