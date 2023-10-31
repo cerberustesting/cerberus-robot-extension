@@ -252,7 +252,11 @@ public class ExecuteFilemanagementAction extends HttpServlet {
                     File[] rawfiles = pathDir.listFiles();
                     int i = 0;
                     for (File rawfile : rawfiles) {
-                        rawfile.delete();
+                        if (!rawfile.delete()) {
+                            deleteDir(rawfile);
+                        } else {
+                            LOG.info("Delete : " + rawfile.getAbsolutePath());
+                        }
                         i++;
                     }
                     actionResult.put("totalFilesDeleted", i);
@@ -310,7 +314,11 @@ public class ExecuteFilemanagementAction extends HttpServlet {
             }
             int i = 0;
             for (File rawfile : rawfiles) {
-                rawfile.delete();
+                if (!rawfile.delete()) {
+                    deleteDir(rawfile);
+                } else {
+                    LOG.info("Delete : " + rawfile.getAbsolutePath());
+                }
                 i++;
             }
             actionResult.put("totalFilesDeleted", i);
@@ -319,6 +327,22 @@ public class ExecuteFilemanagementAction extends HttpServlet {
             actionResult.put("code", 200);
         }
         return actionResult;
+    }
+
+    /**
+     * Recursively delete a folder including all its content.
+     *
+     * @param dirFile
+     */
+    private static void deleteDir(File dirFile) {
+        if (dirFile.isDirectory()) {
+            File[] dirs = dirFile.listFiles();
+            for (File dir : dirs) {
+                deleteDir(dir);
+            }
+        }
+        LOG.info("Delete : " + dirFile.getAbsolutePath());
+        dirFile.delete();
     }
 
     private JSONObject download_files(String filenamecomplete, int nbfiles, String opt, String authorisedFolderScope) throws JSONException, IOException {
