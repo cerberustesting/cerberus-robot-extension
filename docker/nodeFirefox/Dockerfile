@@ -2,6 +2,9 @@
 # Content of https://github.com/SeleniumHQ/docker-selenium/blob/3.141.59-20210929/NodeBase/Dockerfile
 # Content of https://github.com/SeleniumHQ/docker-selenium/blob/3.141.59-20210929/NodeFirefox/Dockerfile
 # ---------------------------------------------------
+# Changelog
+# 2023-07-31 : Added creation of /home/seluser/Downloads Folder
+
 
 FROM selenium/node-base:3.141.59-20201119
 LABEL authors=Cerberus
@@ -45,7 +48,8 @@ RUN GK_VERSION=$(if [ ${GECKODRIVER_VERSION:-latest} = "latest" ]; then echo "0.
   && rm /tmp/geckodriver.tar.gz \
   && mv /opt/geckodriver /opt/geckodriver-$GK_VERSION \
   && chmod 755 /opt/geckodriver-$GK_VERSION \
-  && ln -fs /opt/geckodriver-$GK_VERSION /usr/bin/geckodriver
+  && ln -fs /opt/geckodriver-$GK_VERSION /usr/bin/geckodriver \
+  && mkdir -p /home/seluser/Downloads
 
 # ---------------------------------------------------
 

@@ -2,6 +2,10 @@
 # Content of https://github.com/SeleniumHQ/docker-selenium/blob/3.141.59-20210929/NodeBase/Dockerfile
 # Content of https://github.com/SeleniumHQ/docker-selenium/blob/3.141.59-20210929/NodeFirefox/Dockerfile
 # ---------------------------------------------------
+# Changelog
+# 2023-07-31 : Added creation of /home/seluser/Downloads Folder
+#               ARG on top of file
+
 
 FROM selenium/node-base:3.141.59-20201119
 LABEL authors=Cerberus
@@ -14,6 +18,7 @@ ARG CHROME_VERSION="google-chrome-stable"
 ARG CHROME_DRIVER_VERSION
 ARG VNC_PASSWORD=XXXXXXXX
 ARG CERBERUS_ROBOT_EXTENSION_VERSION=1.7.1
+
 
 #============================================
 # Google Chrome
@@ -60,7 +65,9 @@ RUN if [ -z "$CHROME_DRIVER_VERSION" ]; \
   && rm /tmp/chromedriver_linux64.zip \
   && mv /opt/selenium/chromedriver /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && chmod 755 /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
-  && sudo ln -fs /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION /usr/bin/chromedriver
+  && sudo ln -fs /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION /usr/bin/chromedriver \
+  && mkdir -p /home/seluser/Downloads
+
 
 COPY generate_config /opt/bin/generate_config
 
