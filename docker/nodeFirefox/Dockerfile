@@ -13,10 +13,19 @@ LABEL authors=Cerberus
 
 USER root
 
+#============================================
+# Firefox
+#============================================
+# can specify versions by FIREFOX_VERSION;
+#  e.g. 113.0
+#       116.0.3
+#============================================
+# Check available versions here: https://download-installer.cdn.mozilla.net/pub/firefox/releases/
 ARG FIREFOX_VERSION=latest
 ARG GECKODRIVER_VERSION=latest
 ARG VNC_PASSWORD=XXXXXXXX
 ARG CERBERUS_ROBOT_EXTENSION_VERSION=1.7.1
+
 
 #=========
 # Firefox
