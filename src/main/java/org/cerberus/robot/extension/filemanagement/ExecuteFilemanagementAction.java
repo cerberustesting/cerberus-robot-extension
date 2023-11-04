@@ -295,14 +295,15 @@ public class ExecuteFilemanagementAction extends HttpServlet {
             filename = "";
         }
 
-        if (!pathDir.exists()) {
-            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' does not exist !! We consider it as empty/cleaned already...");
-            actionResult.put("status", "OK");
-            actionResult.put("code", 200);
-        } else if (!check_authorisation(pathDir, authorisedFolderScope)) {
-            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' is not authorised !! The path '" + pathDir.toPath().toRealPath().toString() + File.separator + "' is not inside '" + authorisedFolderScope + "'.");
+        if (!check_authorisation(pathDir, authorisedFolderScope)) {
+            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' is not authorised !! It is not inside '" + authorisedFolderScope + "'.");
             actionResult.put("status", "Failed");
             actionResult.put("code", 403);
+        } else if (!pathDir.exists()) {
+            pathDir.mkdirs();
+            actionResult.put("message", "Path '" + pathDir.getAbsolutePath() + "' does not exist !! Folder created and cleaned...");
+            actionResult.put("status", "OK");
+            actionResult.put("code", 200);
         } else {
             // Get all files.
             File[] rawfiles;
