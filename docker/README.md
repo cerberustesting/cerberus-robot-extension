@@ -1,4 +1,4 @@
-# Dokerfile for Cerberus nodes
+# Dockerfile for Cerberus nodes
 
 You can use those Dockerfiles in order to build your own image.
 
