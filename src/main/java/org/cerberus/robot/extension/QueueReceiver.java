@@ -6,6 +6,8 @@
 package org.cerberus.robot.extension;
 
 import java.io.File;
+
+import org.cerberus.robot.extension.awt.ExecuteAwtAction;
 import org.cerberus.robot.extension.sikuli.ExecuteSikuliAction;
 import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
@@ -150,6 +152,8 @@ public class QueueReceiver {
             server.setHandler(servletHandler);
             servletHandler.addServletWithMapping(ExecuteSikuliAction.class, "/extra/ExecuteSikuliAction");
             LOG.info("Servlet listening on : /extra/ExecuteSikuliAction");
+            servletHandler.addServletWithMapping(ExecuteAwtAction.class, "/extra/ExecuteAwtAction");
+            LOG.info("Servlet listening on : /extra/ExecuteAwtAction");
             servletHandler.addServletWithMapping(ExecuteFilemanagementAction.class, "/extra/ExecuteFilemanagementAction");
             LOG.info("Servlet listening on : /extra/ExecuteFilemanagementAction | Limited to scope : '{}'", System.getProperty("authorisedFolderScope"));
             servletHandler.addServletWithMapping(ExecuteManagementAction.class, "/extra/ExecuteManagementAction");
