@@ -109,12 +109,8 @@ public class ExecuteFilemanagementAction extends HttpServlet {
             switch (action) {
                 case "cleanFolder":
                     /**
-                     * We get content of the file in Baase64 format, write it to
-                     * a file, optionaly purge the corresponding folder before.
+                     * We clean all the content of the folder provided.
                      */
-//                        if (obj.has("path")) {
-//                            path = obj.getString("path");
-//                        }
                     if (obj.has("filename")) {
                         filename = obj.getString("filename");
                     }
@@ -125,11 +121,8 @@ public class ExecuteFilemanagementAction extends HttpServlet {
                 case "upload":
                     /**
                      * We get content of the file in Baase64 format, write it to
-                     * a file, optionaly purge the corresponding folder before.
+                     * a file, optionally purge the corresponding folder before.
                      */
-//                        if (obj.has("path")) {
-//                            path = obj.getString("path");
-//                        }
                     if (obj.has("filename")) {
                         filename = obj.getString("filename");
                     }
