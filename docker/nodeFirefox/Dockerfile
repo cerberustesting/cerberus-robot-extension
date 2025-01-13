@@ -135,7 +135,16 @@ RUN  wget --no-verbose http://vm.cerberus-testing.org/delivery/cerberus-robot-ex
 
 USER root
 
-RUN apt-get update -qqy && apt-get -qqy --no-install-recommends install sikuli-ide  libopencv3.2 libopencv3.2-java libopencv3.2-jni tesseract-ocr && rm -rf /var/lib/apt/lists/*
+# Install OpenJDK for running Sikuli
+RUN apt-get update -qqy && apt-get install -qqy openjdk-11-jdk wget
+
+# Download Sikuli IDE JAR file
+RUN wget https://launchpad.net/sikuli/sikulix/2.0.5/+download/sikulixide-2.0.5.jar -O /opt/sikulixide.jar \
+    && chmod +x /opt/sikulixide.jar
+
+RUN apt-get update -qqy && apt-get install -qqy libopencv-dev python3-opencv
+
+#RUN apt-get update -qqy && apt-get -qqy --no-install-recommends install sikuli-ide  libopencv3.2 libopencv3.2-java libopencv3.2-jni tesseract-ocr && rm -rf /var/lib/apt/lists/*
 
 RUN ln -s /usr/lib/jni/libopencv_java320.so /usr/lib/libopencv_java.so
 
