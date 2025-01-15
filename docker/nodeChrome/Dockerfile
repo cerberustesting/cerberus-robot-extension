@@ -7,7 +7,7 @@
 #               ARG on top of file
 
 
-FROM selenium/node-base:3.141.59-20201119
+FROM selenium/node-base:4.19.0
 LABEL authors=Cerberus
 
 # ---------------------------------------------------

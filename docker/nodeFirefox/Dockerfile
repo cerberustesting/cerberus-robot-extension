@@ -6,7 +6,7 @@
 # 2023-07-31 : Added creation of /home/seluser/Downloads Folder
 
 
-FROM selenium/node-base:3.141.59-20201119
+FROM selenium/node-base:4.19.0
 LABEL authors=Cerberus
 
 # ---------------------------------------------------
