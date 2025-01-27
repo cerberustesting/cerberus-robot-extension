@@ -196,7 +196,7 @@ RUN apt-get update -qqy && apt-get -qqy --no-install-recommends install sikuli-i
 RUN ln -s /usr/lib/jni/libopencv_java320.so /usr/lib/libopencv_java.so
 
 #==============================
-# SCript in order to kill zombie processes
+# Script in order to kill zombie processes
 #==============================
 COPY kill-browser-zombieprocess.sh /opt/kill-browser-zombieprocess.sh
 RUN chmod 0755 /opt/kill-browser-zombieprocess.sh
@@ -205,3 +205,15 @@ USER seluser
 
 ENV SE_OPTS="-servlets org.cerberus.robot.extension.sikuli.ExecuteSikuliAction -servlets org.cerberus.robot.extension.filemanagement.ExecuteFilemanagementAction -servlets org.cerberus.robot.extension.management.ExecuteManagementAction"
 
+
+#==============================
+# Script in order to install chrome certificate
+# Need certificate.p12 and test_policies.json files in the same Dockerfile folder
+#==============================
+#USER root
+
+#RUN apt-get update -qqy && apt-get -qqy install libnss3-tools
+#RUN mkdir -p $HOME/.pki/nssdb
+#COPY certificate.p12 /usr/share/certificate.p12
+#RUN pk12util -d sql:$HOME/.pki/nssdb -i /usr/share/certificate.p12 -W password
+#COPY test_policies.json /etc/opt/chrome/policies/managed/test_policies.json
