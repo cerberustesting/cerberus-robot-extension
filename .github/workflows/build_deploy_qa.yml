@@ -6,9 +6,9 @@ name: Deploy to QA
 on:
   push:
     branches: [ master ]
-  # temporary disabled due to qa deployements during unmerged pull requests
-  # pull_request:
-  #  branches: [ master ]
+    paths-ignore:
+    - 'README.md'
+    - '.github/**'
 
 jobs:
   build:
