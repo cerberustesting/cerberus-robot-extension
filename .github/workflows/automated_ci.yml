@@ -61,7 +61,7 @@ jobs:
         git tag -f -a ${{ steps.getVersion.outputs.version }} -m "Release ${{ steps.getVersion.outputs.version }}."
         git push -f origin ${{ steps.getVersion.outputs.version }}
         gh release list
-        gh release upload ${{ steps.getVersion.outputs.version }} ./target/cerberus-robot-extension-${{ steps.getVersion.outputs.version }}.jar --clobber
+        gh release upload ${{ steps.getVersion.outputs.version }} ./target/cerberus-robot-extension-${{ steps.getVersion.outputs.version }}-full.jar --clobber
 
   docker:
     name: Docker Build & Push
