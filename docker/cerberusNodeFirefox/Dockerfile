@@ -1,7 +1,7 @@
 ARG NAMESPACE=selenium
 ARG VERSION=4.19.0-20240328
-#ARG VERSION=145.0-chromedriver-145.0-grid-4.41.0-20260222
-ARG BASE=node-chrome
+#ARG VERSION=128.0-geckodriver-0.36-grid-4.41.0-20260222
+ARG BASE=node-firefox
 FROM ${NAMESPACE}/${BASE}:${VERSION}
 LABEL authors=${AUTHORS}
 
