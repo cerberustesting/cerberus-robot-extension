@@ -102,7 +102,6 @@ public class ExecuteSikuliAction extends HttpServlet {
              * information expected is a JSON cast into String JSONObject
              * contains action, picture, text, defaultWait, pictureExtension
              */
-
             is = new BufferedReader(new InputStreamReader(request.getInputStream()));
             os = new PrintStream(response.getOutputStream());
             String line = "";
@@ -193,10 +192,7 @@ public class ExecuteSikuliAction extends HttpServlet {
 
             int highlightElement = 0;
             if (obj.has("highlightElement")) {
-                if (!obj.getString("highlightElement").trim().equals("")) {
-                    String sHighlightElement = obj.getString("highlightElement");
-                    highlightElement = Integer.valueOf(sHighlightElement);
-                }
+                highlightElement = obj.getInt("highlightElement");
             }
             int xOffset = 0;
             if (obj.has("xOffset")) {
