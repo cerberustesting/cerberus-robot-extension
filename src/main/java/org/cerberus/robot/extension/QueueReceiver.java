@@ -25,6 +25,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.cerberus.robot.extension.filemanagement.ExecuteFilemanagementAction;
 import org.cerberus.robot.extension.management.ExecuteManagementAction;
+import org.cerberus.robot.extension.parameter.Parameter;
 import org.cerberus.robot.extension.version.Infos;
 
 /**
@@ -87,25 +88,24 @@ public class QueueReceiver {
             if (cmd.hasOption("port")) {
                 portParam = cmd.getOptionValue("port");
             }
+            LOG.info(infos.getProjectNameAndVersion() + " - Build " + infos.getProjectBuildId() + " - Http Server Launching on port : " + portParam);
 
-            /**
-             * Set DebugMode if specified
-             */
-            if (cmd.hasOption("debug")) {
-                LOG.info("Activating Debug Mode.");
-                setLogLevelToDebug();
-            }
             /**
              * Set Highlight Element if specified
              */
+            Parameter param = Parameter.getInstance();
+            param.setHighlightElement(Integer.parseInt("0"));
             if (cmd.hasOption("highlightElement")) {
+                param.setHighlightElement(Integer.parseInt(cmd.getOptionValue("highlightElement")));
                 System.setProperty("highlightElement", cmd.getOptionValue("highlightElement"));
                 LOG.info("Set highlightElement parameter to " + cmd.getOptionValue("highlightElement") + " seconds");
             }
             /**
              * Set Authorised Folder Scope if specified
              */
+            param.setAuthorisedFolderScope("");
             if (cmd.hasOption("authorisedFolderScope")) {
+                param.setAuthorisedFolderScope(cmd.getOptionValue("authorisedFolderScope"));
                 System.setProperty("authorisedFolderScope", cmd.getOptionValue("authorisedFolderScope"));
                 LOG.info("Set authorisedFolderScope parameter to " + cmd.getOptionValue("authorisedFolderScope"));
             }
@@ -123,6 +123,7 @@ public class QueueReceiver {
                     }
                     LOG.warn("Java Property (java.io.tmpdir) for temporary folder not defined. Default to :" + sauthorisedFolderScope);
                 }
+                param.setAuthorisedFolderScope(sauthorisedFolderScope);
                 System.setProperty("authorisedFolderScope", sauthorisedFolderScope);
             }
 
@@ -138,7 +139,6 @@ public class QueueReceiver {
             /*
              * Start the server
              */
-            LOG.info(infos.getProjectNameAndVersion() + " - Build " + infos.getProjectBuildId() + " - Http Server Launching on port : " + portParam);
             Server server = new Server();
 
             ServerConnector connector = new ServerConnector(server);
@@ -163,14 +163,4 @@ public class QueueReceiver {
             LOG.error(ex, ex);
         }
     }
-
-    private static void setLogLevelToDebug() {
-        Logger logger = LogManager.getRootLogger();
-        Configurator.setAllLevels(logger.getName(), Level.DEBUG);
-        Configurator.setLevel(LOG.getName(), Level.DEBUG);
-        Configurator.setAllLevels(logger.getName(), Level.DEBUG);
-//        Configurator.setLevel(System.getProperty("log4j.logger"), Level.DEBUG);
-        LOG.debug("Debug mode enabled");
-    }
-
 }

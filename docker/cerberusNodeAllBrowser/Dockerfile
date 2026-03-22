@@ -1,6 +1,6 @@
 ARG NAMESPACE=selenium
-ARG VERSION=128.0-geckodriver-0.36-grid-4.41.0-20260222
-ARG BASE=node-firefox
+ARG VERSION=4.41.0
+ARG BASE=node-all-browsers
 FROM ${NAMESPACE}/${BASE}:${VERSION}
 LABEL authors=${AUTHORS}
 

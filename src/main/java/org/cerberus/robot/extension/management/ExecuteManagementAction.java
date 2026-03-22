@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.cerberus.robot.extension.version.Infos;
+import org.opencv.core.Core;
 
 /**
  *
@@ -62,56 +63,56 @@ public class ExecuteManagementAction extends HttpServlet {
             //continue if BufferReader is not null, 
             //else, print message
 //            if (is.ready()) {
+            os = new PrintStream(response.getOutputStream());
+            String line = "";
 
-                os = new PrintStream(response.getOutputStream());
-                String line = "";
+            Infos infos = new Infos();
+            LOG.debug("Start reading InputStream");
+            while ((line = is.readLine()) != null) {
+                sb.append(line);
+            }
 
-                Infos infos = new Infos();
-                LOG.debug("Start reading InputStream");
-                while ((line = is.readLine()) != null) {
-                    sb.append(line);
-                }
+            /**
+             * Convert String into JSONObject
+             */
+            LOG.debug("InputStream : " + sb.toString());
 
-                /**
-                 * Convert String into JSONObject
-                 */
-                LOG.debug("InputStream : " + sb.toString());
+            LOG.info("Executing Management Request.");
 
-                LOG.info("Executing Management Request.");
+            JSONObject actionResult = new JSONObject();
+            actionResult.put("status", "OK");
 
-                JSONObject actionResult = new JSONObject();
-                actionResult.put("status", "OK");
+            actionResult.put("version", infos.getProjectNameAndVersion());
+            actionResult.put("buildid", infos.getProjectBuildId());
+            actionResult.put("java.prop-log4j.logger", System.getProperty("log4j.logger"));
+            actionResult.put("java.prop-java.io.tmpdir", System.getProperty("java.io.tmpdir"));
+            actionResult.put("java.prop-authorisedFolderScope", System.getProperty("authorisedFolderScope"));
 
-                actionResult.put("version", infos.getProjectNameAndVersion());
-                actionResult.put("buildid", infos.getProjectBuildId());
-                actionResult.put("java.prop-log4j.logger", System.getProperty("log4j.logger"));
-                actionResult.put("java.prop-java.io.tmpdir", System.getProperty("java.io.tmpdir"));
-                actionResult.put("java.prop-authorisedFolderScope", System.getProperty("authorisedFolderScope"));
+            actionResult.put("javaVersion", System.getProperty("java.version"));
+            Runtime instance = Runtime.getRuntime();
+            int mb = 1024 * 1024;
+            actionResult.put("javaFreeMemory", instance.freeMemory() / mb);
+            actionResult.put("javaTotalMemory", instance.totalMemory() / mb);
+            actionResult.put("javaUsedMemory", (instance.totalMemory() - instance.freeMemory()) / mb);
+            actionResult.put("javaMaxMemory", instance.maxMemory() / mb);
 
-                actionResult.put("javaVersion", System.getProperty("java.version"));
-                Runtime instance = Runtime.getRuntime();
-                int mb = 1024 * 1024;
-                actionResult.put("javaFreeMemory", instance.freeMemory() / mb);
-                actionResult.put("javaTotalMemory", instance.totalMemory() / mb);
-                actionResult.put("javaUsedMemory", (instance.totalMemory() - instance.freeMemory()) / mb);
-                actionResult.put("javaMaxMemory", instance.maxMemory() / mb);
+            actionResult.put("openCV", Core.NATIVE_LIBRARY_NAME);
 
-                String str1 = getServletContext().getServerInfo();
-                actionResult.put("applicationServerInfo", str1);
+            String str1 = getServletContext().getServerInfo();
+            actionResult.put("applicationServerInfo", str1);
 
-                /**
-                 * Log and return actionResult
-                 */
-                os.println(actionResult.toString(1));
+            /**
+             * Log and return actionResult
+             */
+            os.println(actionResult.toString(1));
 
-                is.close();
-                os.close();
+            is.close();
+            os.close();
 
 //            } else {
 //                LOG.info("ExecuteManagementAction is up and running. Waiting for requests from Cerberus");
 //                response.getWriter().print("ExecuteManagementAction is up and running. Waiting for requests from Cerberus");
 //            }
-
         } catch (JSONException ex) {
             LOG.warn("JSON Exception : " + ex, ex);
             if (os != null) {

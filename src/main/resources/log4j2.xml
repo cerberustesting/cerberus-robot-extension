@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Configuration>
-  <Appenders>
-    <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5p- %m%n"/>
-    </Console>
-  </Appenders>
-  <Loggers>
-    <Root level="info">
-      <AppenderRef ref="Console"/>
-    </Root>
-  </Loggers>
+    <Properties>
+        <Property name="logLevel">${sys:log.level:-info}</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5p [crb-ext] %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="${logLevel}">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
 </Configuration>

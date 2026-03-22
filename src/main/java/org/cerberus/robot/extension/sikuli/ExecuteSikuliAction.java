@@ -24,9 +24,10 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileDeleteStrategy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.cerberus.robot.extension.parameter.Parameter;
+import org.cerberus.robot.extension.version.Infos;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.sikuli.script.FindFailed;
 
 /**
  *
@@ -62,7 +63,6 @@ public class ExecuteSikuliAction extends HttpServlet {
             rootPath = System.getProperty("java.io.tmpdir");
         } else {
             String sep = "" + File.separatorChar;
-            LOG.info(sep);
             if (sep.equalsIgnoreCase("/")) {
                 rootPath = "/tmp";
             } else {
@@ -71,14 +71,19 @@ public class ExecuteSikuliAction extends HttpServlet {
             LOG.warn("Java Property for temporary folder not defined. Default to :" + rootPath);
         }
 
-        String rootPictureFolder = rootPath + File.separator + "picture";
+        String rootPictureFolder = rootPath + File.separator + "crb-ext-picture";
         File dir = new File(rootPictureFolder);
-
         if (!dir.exists()) {
             dir.mkdir();
         } else {
             FileDeleteStrategy.FORCE.delete(dir);
             dir.mkdir();
+        }
+
+        String rootVideoFolder = rootPath + File.separator + "crb-ext-video";
+        File dirVideo = new File(rootVideoFolder);
+        if (!dirVideo.exists()) {
+            dirVideo.mkdir();
         }
 
         // Forcing a garbage collection
@@ -89,23 +94,19 @@ public class ExecuteSikuliAction extends HttpServlet {
         StringBuilder sb = new StringBuilder();
 
         try {
-            LOG.info("Received ExecuteSikuliAction: [Request from {}]", request.getServerName());
+            Infos infos = new Infos();
+            LOG.info("Received ExecuteSikuliAction {}: [Request from {}]", infos.getProjectVersion() + "-" + infos.getProjectBuildId(), request.getServerName());
 
             /**
              * Get input information until the syntax |ENDS| is received Input
              * information expected is a JSON cast into String JSONObject
              * contains action, picture, text, defaultWait, pictureExtension
              */
-            LOG.debug("Trying to open InputStream");
-            is = new BufferedReader(new InputStreamReader(request.getInputStream()));
 
-            //continue if BufferReader is not null, 
-            //else, print message
-//            if (is.ready()) {
+            is = new BufferedReader(new InputStreamReader(request.getInputStream()));
             os = new PrintStream(response.getOutputStream());
             String line = "";
 
-            LOG.debug("Start reading InputStream");
             while ((line = is.readLine()) != null) {
                 sb.append(line);
             }
@@ -113,8 +114,6 @@ public class ExecuteSikuliAction extends HttpServlet {
             /**
              * Convert String into JSONObject
              */
-            LOG.debug("InputStream : " + sb.toString());
-
             JSONObject obj;
             if (sb.toString() != null && !"".equals(sb.toString())) {
                 obj = new JSONObject(sb.toString());
@@ -125,8 +124,12 @@ public class ExecuteSikuliAction extends HttpServlet {
                 obj.put("text", "");
                 obj.put("defaultWait", 0);
                 obj.put("pictureExtension", "");
-                obj.put("picture", "unknown");
+                obj.put("minSimilarity", "");
+                obj.put("typeDelay", "");
+                obj.put("executionId", 0);
+                obj.put("screenshot", 0);
             }
+            LOG.debug(obj.toString(2));
 
             String action = obj.getString("action");
             String picture = obj.getString("picture");
@@ -138,6 +141,14 @@ public class ExecuteSikuliAction extends HttpServlet {
             String text2 = "";
             if (obj.has("text2")) {
                 text2 = obj.getString("text2");
+            }
+            int screenshot = 0;
+            if (obj.has("screenshot")) {
+                screenshot = obj.getInt("screenshot");
+            }
+            long executionId = 0;
+            if (obj.has("executionId")) {
+                executionId = obj.getLong("executionId");
             }
             int defaultWait = obj.getInt("defaultWait");
             String extension = obj.getString("pictureExtension");
@@ -219,10 +230,9 @@ public class ExecuteSikuliAction extends HttpServlet {
             if (!"".equals(picture)) {
                 String pictureName = new SimpleDateFormat("YYYY.MM.dd.HH.mm.ss.SSS").format(new Date());
                 if (extension.startsWith(".")) {
-                    pictureName += extension;
+                    pictureName += "_1" + extension;
                 } else {
-                    pictureName += "." + extension;
-
+                    pictureName += "_1." + extension;
                 }
                 picturePath = rootPictureFolder + File.separator + pictureName;
 
@@ -243,10 +253,9 @@ public class ExecuteSikuliAction extends HttpServlet {
             if (!"".equals(picture2)) {
                 String picture2Name = new SimpleDateFormat("YYYY.MM.dd.HH.mm.ss.SSS").format(new Date());
                 if (extension2.startsWith(".")) {
-                    picture2Name += extension2;
+                    picture2Name += "_2" + extension2;
                 } else {
-                    picture2Name += "." + extension2;
-
+                    picture2Name += "_2." + extension2;
                 }
                 picture2Path = rootPictureFolder + File.separator + picture2Name;
 
@@ -263,7 +272,7 @@ public class ExecuteSikuliAction extends HttpServlet {
                 logPictureInfo += ": and text '" + text2 + "'";
             }
 
-            LOG.info("Executing: [" + action + logPictureInfo + "]");
+            LOG.info("[{}] Executing... {}", action, logPictureInfo);
 
             JSONObject actionResult = new JSONObject();
             actionResult.put("status", "KO");
@@ -275,91 +284,48 @@ public class ExecuteSikuliAction extends HttpServlet {
             String stacktrace = null;
 
             /**
-             * Loop on action until success or timeout
+             * Trigger the action/control
              */
-            int i = 0;
-            while (System.currentTimeMillis() < end_time && i++ < 500) {
-                try {
-                    actionResult = sikuliAction.doAction(action, picturePath, picture2Path, text, text2, minSimilarityD, typeDelayD, highlightElement, rootPictureFolder, xOffset, yOffset, xOffset2, yOffset2);
-                    if (actionResult.toString().length() > 300) {
-                        LOG.debug("JSON Result from Action : " + actionResult.toString().substring(0, 300) + "...");
-                    } else {
-                        LOG.debug("JSON Result from Action : " + actionResult.toString());
-                    }
-                    /**
-                     * If action OK, break the loop. Else, log and try again
-                     * until timeout
-                     */
-                    if (actionResult.has("status")) {
-                        if (action.equals("exists")) {
-                            if ("OK".equals(actionResult.get("status"))) {
-                                breakOccured = true;
-                                LOG.debug("Break retry loop on exists action. (Element has been found)");
-                                break;
-                            }
-                        } else if (action.equals("notExists")) {
-                            if ("KO".equals(actionResult.get("status"))) {
-                                breakOccured = true;
-                                LOG.debug("Break retry loop on notExists action (Element has been found)");
-                                break;
-                            }
-
-                        } else {
-                            if ("OK".equals(actionResult.get("status"))) {
-                                breakOccured = true;
-                                LOG.debug("Break retry for default action");
-                                break;
-                            }
-                        }
-                    } else {
-                        LOG.debug("Missing status entry from JSON.");
-                    }
-                    LOG.info("Retrying again during " + (end_time - System.currentTimeMillis()) + " ms");
-
-                } catch (FindFailed ex) {
-                    LOG.debug("Element Not Found yet: " + ex);
-                    LOG.info("Retrying again during " + (end_time - System.currentTimeMillis()) + " ms");
-
-                } catch (Exception ex) {
-                    LOG.error("General Exception : ", ex);
-                    message = ex.toString();
-                    StringWriter sw = new StringWriter();
-                    PrintWriter pw = new PrintWriter(sw);
-                    ex.printStackTrace(pw);
-                    stacktrace = sw.toString();
-                    actionResult.put("message", message);
-                    actionResult.put("stacktrace", stacktrace);
-                    actionResult.put("status", "Failed");
-                    errorOccured = true;
-                    break;
-                }
-            }
-
-            if (action.equals("exists") && !breakOccured && !errorOccured) {
-                LOG.debug("We looped until the end never finding the element so can conclude it is not there. Exists --> KO");
-                actionResult.put("status", "KO");
-            }
-            if (action.equals("notExists") && !breakOccured && !errorOccured) {
-                LOG.debug("We looped until the end never finding the element so can conclude it is not there. NotExists --> OK");
-                actionResult.put("status", "OK");
+            try {
+                actionResult = sikuliAction.doAction(action, picturePath, picture2Path,
+                        text, text2, minSimilarityD, typeDelayD, highlightElement,
+                        rootPictureFolder, rootVideoFolder,
+                        xOffset, yOffset, xOffset2, yOffset2, end_time, executionId, screenshot);
+            } catch (Exception ex) {
+                LOG.error("General Exception : ", ex);
+                message = ex.toString();
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                ex.printStackTrace(pw);
+                stacktrace = sw.toString();
+                actionResult.put("message", message);
+                actionResult.put("stacktrace", stacktrace);
+                actionResult.put("status", "Failed");
+                errorOccured = true;
             }
 
             /**
              * Log and return actionResult
              */
-            LOG.info("[" + action + logPictureInfo + "] finish with result: " + actionResult.get("status"));
-            if (action.equals("endExecution")) {
-                LOG.info("----------------------------------------------------------------------");
-            }
+            LOG.info("[{}] finish with result: {}", action, actionResult.get("status"));
             os.println(actionResult.toString());
+
+            LOG.debug("[{}] Response back to Cerberus :", action);
+            // Truncate Base64 fields to reduce log size.
+            if (actionResult.has("screenshot") && actionResult.getString("screenshot").length() > 200) {
+                actionResult.put("screenshot", actionResult.getString("screenshot").substring(0, 199));
+            }
+            if (actionResult.has("screenshotDebug") && actionResult.getString("screenshotDebug").length() > 200) {
+                actionResult.put("screenshotDebug", actionResult.getString("screenshotDebug").substring(0, 199));
+            }
+            if (actionResult.has("videoDebug") && actionResult.getString("videoDebug").length() > 200) {
+                actionResult.put("videoDebug", actionResult.getString("videoDebug").substring(0, 199));
+            }
+            LOG.debug(actionResult.toString(2));
 
             is.close();
             os.close();
 
-//            } else {
-//                LOG.info("ExecuteSikuliAction is up and running. Waiting for requests from Cerberus");
-//                response.getWriter().print("ExecuteSikuliAction is up and running. Waiting for requests from Cerberus");
-//            }
         } catch (JSONException ex) {
             LOG.warn("JSON Exception : " + ex, ex);
             if (os != null) {

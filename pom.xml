@@ -3,15 +3,15 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.cerberus</groupId>
     <artifactId>cerberus-robot-extension</artifactId>
-    <version>1.8-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Cerberus Robot Extension</name>
     
     <properties>
         <!-- Maven properties -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyyMMdd'-'HHmmss</maven.build.timestamp.format>
         <ant-jsch.version>1.10.1</ant-jsch.version>
@@ -79,10 +79,16 @@
         </repository>
     </repositories>
     <dependencies>
+        <!-- OpenCV 4.13 via JavaCPP -->
         <dependency>
-            <groupId>com.sikulix</groupId>
-            <artifactId>sikulixapi</artifactId>
-            <version>2.0.4</version>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>opencv</artifactId>
+            <version>4.13.0-1.5.13</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>opencv-platform</artifactId>
+            <version>4.13.0-1.5.13</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

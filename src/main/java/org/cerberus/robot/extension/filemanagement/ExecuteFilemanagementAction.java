@@ -100,7 +100,7 @@ public class ExecuteFilemanagementAction extends HttpServlet {
 
             String action = obj.getString("action");
 
-            LOG.info("Executing: [" + action + "]");
+            LOG.info("[{}] Executing...", action);
             String path = "";
             String filename = "";
             String opt = "";
@@ -114,7 +114,7 @@ public class ExecuteFilemanagementAction extends HttpServlet {
                     if (obj.has("filename")) {
                         filename = obj.getString("filename");
                     }
-                    LOG.info("Cleaning files from '{}'.", filename);
+                    LOG.info("[{}] Cleaning files from '{}'.", action, filename);
                     actionResult = clean_folder(filename, authorisedFolderScope);
 
                     break;
@@ -132,7 +132,7 @@ public class ExecuteFilemanagementAction extends HttpServlet {
                     if (obj.has("option")) {
                         opt = obj.getString("option");
                     }
-                    LOG.info("Saving local file to path '{}' with option '{}'.", filename, opt);
+                    LOG.info("[{}] Saving local file to path '{}' with option '{}'.", action, filename, opt);
                     actionResult = upload_files(filename, contentBase64, opt, authorisedFolderScope);
 
                     break;
@@ -151,7 +151,7 @@ public class ExecuteFilemanagementAction extends HttpServlet {
                     if (obj.has("option")) {
                         opt = obj.getString("option");
                     }
-                    LOG.info("Getting {} local file(s) from '{}'.", nbfiles, filename);
+                    LOG.info("[{}] Getting {} local file(s) from '{}'.", action, nbfiles, filename);
                     actionResult = download_files(filename, nbfiles, opt, authorisedFolderScope);
 
                     break;
@@ -163,7 +163,7 @@ public class ExecuteFilemanagementAction extends HttpServlet {
             /**
              * Log and return actionResult
              */
-            LOG.info("[" + action + "] finish with result: " + actionResult.get("status"));
+            LOG.info("[{}]  finish with result: {}", action, actionResult.get("status"));
             os.println(actionResult.toString(1));
 
             is.close();
@@ -393,7 +393,7 @@ public class ExecuteFilemanagementAction extends HttpServlet {
                 if ("LASMODIFIED".equals(opt)) {
                     Collections.sort(files, new Comparator<File>() {
                         public int compare(File o1, File o2) {
-                            return new Long(o2.lastModified()).compareTo(o1.lastModified());
+                            return Long.compare(o2.lastModified(), o1.lastModified());
                         }
                     });
                 } else if ("IGNORECASEDESC".equals(opt)) {
