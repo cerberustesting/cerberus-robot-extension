@@ -90,6 +90,7 @@ public class SikuliAction {
     public static final String SIKULI_CLOSEAPP = "closeApp";
     public static final String SIKULI_SWITCHAPP = "switchApp";
     public static final String SIKULI_PASTE = "paste";
+    public static final String SIKULI_CLEARFIELD = "clearField";
     public static final String SIKULI_WAIT = "wait";
     public static final String SIKULI_WAITVANISH = "waitVanish";
     public static final String SIKULI_MOUSEOVER = "mouseOver";
@@ -349,6 +350,40 @@ public class SikuliAction {
                                 performLeftClick(robot);
                                 Thread.sleep(500);
                                 typeKeyboard(action, robot, text, "", typeDelay);
+                                status = STATUS_OK;
+                                message = getMessageFromListPoints(p);
+                            } else {
+                                status = STATUS_FA;
+                                message = MESSAGE_ELEMENTNOTFOUND.replace("%MINSIM%", String.valueOf(minSimilarity));
+
+                            }
+                        } else {
+                            status = STATUS_FA;
+                            message = MESSAGE_MISSINGPARAMETER;
+                        }
+                        break;
+
+                    case SIKULI_CLEARFIELD: // Equivalent of type (ie move to a field and enter data by pressing keys)
+
+                        if (!"".equals(picture)) {
+                            LOG.debug("[{}] clearfield on an IMAGE Action.", action);
+                            List<PointMatch> p = performWait(action, robot, endTime, picture, minSimilarity, xOffset, yOffset);
+
+                            if (!p.isEmpty()) {
+                                screenDebug = highLightPointMatches(robot, p, highlightElementDurationSecond, action);
+                                performMouseMove(action, robot, "absolute " + p.get(0).point.x + "," + p.get(0).point.y);
+                                performLeftClick(robot);
+                                Thread.sleep(500);
+                                // Select All using CTRL + A
+                                robot.keyPress(KeyEvent.VK_CONTROL);
+                                robot.keyPress(KeyEvent.VK_A);
+                                robot.keyRelease(KeyEvent.VK_A);
+                                robot.keyRelease(KeyEvent.VK_CONTROL);
+                                robot.delay((int) (typeDelay * 1000));
+                                // Delete the selected text
+                                robot.keyPress(KeyEvent.VK_DELETE);
+                                robot.keyRelease(KeyEvent.VK_DELETE);
+                                robot.delay((int) (typeDelay * 1000));
                                 status = STATUS_OK;
                                 message = getMessageFromListPoints(p);
                             } else {
