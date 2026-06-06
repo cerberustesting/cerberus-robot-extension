@@ -3,11 +3,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.cerberus.robot.extension.sikuli;
+package org.cerberus.robot.extension.service.sikuli;
 
-//import java.awt.MouseInfo;
-//import java.awt.Point;
-//import java.awt.PointerInfo;
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -37,15 +34,15 @@ import javax.imageio.ImageIO;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bytedeco.javacpp.DoublePointer;
-import static org.cerberus.robot.extension.sikuli.KeyCodeEnum.values;
+import static org.bytedeco.opencv.global.opencv_core.*;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.*;
+import static org.bytedeco.opencv.global.opencv_imgproc.*;
+import org.bytedeco.opencv.opencv_core.*;
+import static org.cerberus.robot.extension.service.sikuli.KeyCodeEnum.values;
+import org.cerberus.robot.extension.service.system.ExecuteSystemAction;
+import org.cerberus.robot.extension.service.system.SystemAction;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.bytedeco.opencv.opencv_core.*;
-import static org.bytedeco.opencv.global.opencv_imgproc.*;
-import static org.bytedeco.opencv.global.opencv_imgcodecs.*;
-import static org.bytedeco.opencv.global.opencv_core.*;
-import org.opencv.core.Core.MinMaxLocResult;
-import org.opencv.imgproc.Imgproc;
 
 /**
  *
@@ -136,7 +133,7 @@ public class SikuliAction {
     JSONObject doAction(String action, String picture, String picture2, String text, String text2,
             Double minSimilarity, Double typeDelay, int highlightElementDurationSecond_Requested, String rootPictureFolder, String rootVideoFolder,
             int xOffset, int yOffset, int xOffset2, int yOffset2,
-            long endTime, long executionId, int screenshot) {
+            long endTime, long executionId, int screenshot, String processName, boolean filterStrict) {
 
         JSONObject result = new JSONObject();
         int highlightElementDurationSecond = highlightElementDurationSecond_Requested;
@@ -466,6 +463,7 @@ public class SikuliAction {
 
                     case SIKULI_ENDEXECUTION:
                     case SIKULI_ENDEXECUTIONWITHVIDEO:
+                        SystemAction systemAction = new SystemAction();
                         status = performEndExecution(action, robot);
                         String videoDebug = null;
                         if (SIKULI_ENDEXECUTIONWITHVIDEO.equals(action)) {
@@ -476,6 +474,9 @@ public class SikuliAction {
                         if (videoDebug != null) {
                             result.put("videoDebug", videoDebug);
                         }
+                        LOG.info("[{}] Checking CPU from process name {} with strict filter {}.", action, processName, filterStrict);
+                        result.put("system", systemAction.getCPU(processName, filterStrict));
+
                         break;
                 }
 

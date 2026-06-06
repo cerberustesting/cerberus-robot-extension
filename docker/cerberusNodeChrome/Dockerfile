@@ -1,5 +1,5 @@
 ARG NAMESPACE=selenium
-ARG VERSION=145.0-chromedriver-145.0-grid-4.41.0-20260222
+ARG VERSION=148.0-chromedriver-148.0-grid-4.44.0-20260505
 ARG BASE=node-chrome
 FROM ${NAMESPACE}/${BASE}:${VERSION}
 LABEL authors=${AUTHORS}

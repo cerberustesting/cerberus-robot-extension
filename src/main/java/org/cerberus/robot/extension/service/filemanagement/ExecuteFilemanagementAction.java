@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.cerberus.robot.extension.filemanagement;
+package org.cerberus.robot.extension.service.filemanagement;
 
 import java.io.BufferedReader;
 import java.io.File;

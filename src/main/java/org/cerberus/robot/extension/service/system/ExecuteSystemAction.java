@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.cerberus.robot.extension.management;
+package org.cerberus.robot.extension.service.system;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,16 +19,18 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.cerberus.robot.extension.version.Infos;
-import org.opencv.core.Core;
 
 /**
  *
  * @author bcivel
  */
-public class ExecuteManagementAction extends HttpServlet {
+public class ExecuteSystemAction extends HttpServlet {
 
-    private static final Logger LOG = LogManager.getLogger(ExecuteManagementAction.class);
+    private static final String STATUS_OK = "OK";
+    private static final String STATUS_KO = "KO";
+    private static final String STATUS_FA = "Failed";
+
+    private static final Logger LOG = LogManager.getLogger(ExecuteSystemAction.class);
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -42,15 +44,20 @@ public class ExecuteManagementAction extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF8");
-
         PrintStream os = null;
         BufferedReader is = null;
-        StringBuilder sb = new StringBuilder();
 
         try {
-            LOG.info("Received ExecuteManagementAction: [Request from {}]", request.getServerName());
+
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF8");
+
+            JSONObject actionResult = new JSONObject();
+            actionResult.put("status", "OK");
+
+            StringBuilder sb = new StringBuilder();
+
+            LOG.info("Received ExecuteSystemAction: [Request from {}]", request.getServerName());
 
             /**
              * Get input information until the syntax |ENDS| is received Input
@@ -66,7 +73,6 @@ public class ExecuteManagementAction extends HttpServlet {
             os = new PrintStream(response.getOutputStream());
             String line = "";
 
-            Infos infos = new Infos();
             LOG.debug("Start reading InputStream");
             while ((line = is.readLine()) != null) {
                 sb.append(line);
@@ -77,49 +83,64 @@ public class ExecuteManagementAction extends HttpServlet {
              */
             LOG.debug("InputStream : " + sb.toString());
 
-            LOG.info("Executing Management Request.");
+            JSONObject obj = new JSONObject(sb.toString());
 
-            JSONObject actionResult = new JSONObject();
-            actionResult.put("status", "OK");
+            String action = obj.getString("action");
 
-            actionResult.put("version", infos.getProjectNameAndVersion());
-            actionResult.put("buildid", infos.getProjectBuildId());
-            actionResult.put("java.prop-log4j.logger", System.getProperty("log4j.logger"));
-            actionResult.put("java.prop-java.io.tmpdir", System.getProperty("java.io.tmpdir"));
-            actionResult.put("java.prop-authorisedFolderScope", System.getProperty("authorisedFolderScope"));
+            LOG.info("[{}] Executing...", action);
+            String param1 = "";
+            Boolean param1Boo = true;
+            SystemAction systemAction = new SystemAction();
+            
+            switch (action) {
+                case "getProcess":
+                    /**
+                     * We get all details of a process
+                     */
+                    if (obj.has("processName")) {
+                        param1 = obj.getString("processName");
+                    }
+                    if (obj.has("filterStrict")) {
+                        param1Boo = obj.getBoolean("filterStrict");
+                    } else {
+                        param1Boo = false;
+                    }
+                    LOG.info("[{}] Checking CPU from process name {} with strict filter {}.", action, param1, param1Boo);
+                    actionResult = systemAction.getCPU(param1, param1Boo);
 
-            actionResult.put("javaVersion", System.getProperty("java.version"));
-            Runtime instance = Runtime.getRuntime();
-            int mb = 1024 * 1024;
-            actionResult.put("javaFreeMemory", instance.freeMemory() / mb);
-            actionResult.put("javaTotalMemory", instance.totalMemory() / mb);
-            actionResult.put("javaUsedMemory", (instance.totalMemory() - instance.freeMemory()) / mb);
-            actionResult.put("javaMaxMemory", instance.maxMemory() / mb);
+                    break;
+                case "checkCertificate":
+                    /**
+                     * We get the details of a certificate
+                     */
+                    if (obj.has("url")) {
+                        param1 = obj.getString("url");
+                    }
+                    LOG.info("[{}] Checking certificate details from {} .", action, param1);
+                    actionResult = systemAction.checkCertificate(param1);
 
-            actionResult.put("openCV", Core.NATIVE_LIBRARY_NAME);
-
-            String str1 = getServletContext().getServerInfo();
-            actionResult.put("applicationServerInfo", str1);
+                    break;
+                default:
+                    actionResult.put("status", STATUS_FA);
+                    actionResult.put("message", "Unknown or mising action '" + action + "'");
+            }
 
             /**
              * Log and return actionResult
              */
+            LOG.info("[{}]  finish with result: {}", action, actionResult.get("status"));
             os.println(actionResult.toString(1));
 
             is.close();
             os.close();
 
-//            } else {
-//                LOG.info("ExecuteManagementAction is up and running. Waiting for requests from Cerberus");
-//                response.getWriter().print("ExecuteManagementAction is up and running. Waiting for requests from Cerberus");
-//            }
         } catch (JSONException ex) {
             LOG.warn("JSON Exception : " + ex, ex);
             if (os != null) {
                 os.println("{\"status\" : \"Failed\", \"message\" : \"Unsupported request to Extension\"}");
             }
         } catch (Exception ex) {
-            LOG.error("Exception : " + ex);
+            LOG.error("Exception : " + ex, ex);
             try {
                 if (os != null) {
                     String message = ex.toString();
@@ -128,10 +149,10 @@ public class ExecuteManagementAction extends HttpServlet {
                     ex.printStackTrace(pw);
                     String stacktrace = sw.toString();
                     JSONObject result = new JSONObject();
-                    result.put("status", "Failed");
+                    result.put("status", STATUS_FA);
                     result.put("message", message);
                     result.put("stacktrace", stacktrace);
-                    os.println(result.toString());
+                    os.println(result.toString(1));
                 }
             } catch (JSONException ex1) {
                 LOG.error(ex1, ex1);

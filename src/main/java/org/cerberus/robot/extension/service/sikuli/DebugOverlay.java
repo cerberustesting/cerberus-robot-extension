@@ -1,4 +1,4 @@
-package org.cerberus.robot.extension.sikuli;
+package org.cerberus.robot.extension.service.sikuli;
 
 import javax.swing.*;
 import java.awt.*;

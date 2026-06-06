@@ -6,7 +6,7 @@
 package org.cerberus.robot.extension;
 
 import java.io.File;
-import org.cerberus.robot.extension.sikuli.ExecuteSikuliAction;
+import org.cerberus.robot.extension.service.sikuli.ExecuteSikuliAction;
 import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -23,9 +23,10 @@ import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
-import org.cerberus.robot.extension.filemanagement.ExecuteFilemanagementAction;
-import org.cerberus.robot.extension.management.ExecuteManagementAction;
+import org.cerberus.robot.extension.service.filemanagement.ExecuteFilemanagementAction;
+import org.cerberus.robot.extension.service.management.ExecuteManagementAction;
 import org.cerberus.robot.extension.parameter.Parameter;
+import org.cerberus.robot.extension.service.system.ExecuteSystemAction;
 import org.cerberus.robot.extension.version.Infos;
 
 /**
@@ -149,11 +150,14 @@ public class QueueReceiver {
 
             server.setHandler(servletHandler);
             servletHandler.addServletWithMapping(ExecuteSikuliAction.class, "/extra/ExecuteSikuliAction");
-            LOG.info("Servlet listening on : /extra/ExecuteSikuliAction");
+            servletHandler.addServletWithMapping(ExecuteSikuliAction.class, "/extra/ExecuteRemoteScreenAction");
+            LOG.info("Servlet listening on : /extra/ExecuteSikuliAction and /extra/ExecuteRemoteScreenAction");
             servletHandler.addServletWithMapping(ExecuteFilemanagementAction.class, "/extra/ExecuteFilemanagementAction");
             LOG.info("Servlet listening on : /extra/ExecuteFilemanagementAction | Limited to scope : '{}'", System.getProperty("authorisedFolderScope"));
             servletHandler.addServletWithMapping(ExecuteManagementAction.class, "/extra/ExecuteManagementAction");
             LOG.info("Servlet listening on : /extra/ExecuteManagementAction");
+            servletHandler.addServletWithMapping(ExecuteSystemAction.class, "/extra/ExecuteSystemAction");
+            LOG.info("Servlet listening on : /extra/ExecuteSystemAction");
 
             server.start();
             server.join();

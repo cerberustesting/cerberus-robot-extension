@@ -1,5 +1,5 @@
 ARG NAMESPACE=selenium
-ARG VERSION=128.0-geckodriver-0.36-grid-4.41.0-20260222
+ARG VERSION=151.0-geckodriver-0.36-grid-4.44.0-20260505
 ARG BASE=node-firefox
 FROM ${NAMESPACE}/${BASE}:${VERSION}
 LABEL authors=${AUTHORS}

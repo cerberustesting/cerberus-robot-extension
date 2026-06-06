@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.cerberus.robot.extension.sikuli;
+package org.cerberus.robot.extension.service.sikuli;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -210,6 +210,16 @@ public class ExecuteSikuliAction extends HttpServlet {
             if (obj.has("yOffset2")) {
                 yOffset2 = obj.getInt("yOffset2");
             }
+            String processName = "";
+            if (obj.has("processName")) {
+                processName = obj.getString("processName");
+            }
+            boolean filterStrict = false;
+            if (obj.has("filterStrict")) {
+                filterStrict = obj.getBoolean("filterStrict");
+            } else {
+                filterStrict = false;
+            }
 
             /**
              * Init startTime and endTime for loop retry
@@ -286,7 +296,8 @@ public class ExecuteSikuliAction extends HttpServlet {
                 actionResult = sikuliAction.doAction(action, picturePath, picture2Path,
                         text, text2, minSimilarityD, typeDelayD, highlightElement,
                         rootPictureFolder, rootVideoFolder,
-                        xOffset, yOffset, xOffset2, yOffset2, end_time, executionId, screenshot);
+                        xOffset, yOffset, xOffset2, yOffset2, end_time, executionId, screenshot,
+                        processName, filterStrict);
             } catch (Exception ex) {
                 LOG.error("General Exception : ", ex);
                 message = ex.toString();
