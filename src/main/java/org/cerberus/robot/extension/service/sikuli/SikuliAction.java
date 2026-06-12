@@ -891,9 +891,14 @@ public class SikuliAction {
             robot.keyPress(keyCodeModif);
             robot.delay((int) (delay * 1000));
         }
-        for (char c : text.toCharArray()) {
-            int keyCode = KeyEvent.getExtendedKeyCodeForChar(c);
-            LOG.info("[{}] Type key {} --> {} with delay {} ms", action, c, keyCode, (int) (delay * 1000));
+        for (String splitKey : splitKeys(text)) {
+            int keyCode;
+            if (splitKey.startsWith("Key.")) {
+                keyCode = KeyCodeEnum.getAwtKeyCode(splitKey);
+            } else {
+                keyCode = KeyEvent.getExtendedKeyCodeForChar(splitKey.charAt(0));
+            }
+            LOG.info("[{}] Type key {} --> {} with delay {} ms", action, splitKey, keyCode, (int) (delay * 1000));
             robot.keyPress(keyCode);
             robot.keyRelease(keyCode);
             robot.delay((int) (delay * 1000));
@@ -905,15 +910,34 @@ public class SikuliAction {
         }
     }
 
-    private String convertTextToType(String text) {
-        for (KeyCodeEnum en : values()) {
-            text = text.replace(en.getKeyName(), KeyEvent.getKeyText(en.getKeyCode()));
+    private static List<String> splitKeys(String input) {
+        List<String> result = new ArrayList<>();
+
+        int pos = 0;
+        while (pos < input.length()) {
+            boolean found = false;
+
+            for (KeyCodeEnum key : KeyCodeEnum.values()) {
+                String keyText = key.getKeyName();
+
+                if (input.startsWith(keyText, pos)) {
+                    result.add(keyText);
+                    pos += keyText.length();
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                result.add(String.valueOf(input.charAt(pos)));
+                pos++;
+            }
         }
-        return text;
+
+        return result;
     }
 
     private String getMessageFromListPoints(List<PointMatch> p) {
-        String mess = "";
         if (p.size() == 1) {
             return MESSAGE_1ELEMENTFOUND;
         } else if (p.size() > 1) {
@@ -924,7 +948,6 @@ public class SikuliAction {
     }
 
     private String getMessageFromListPoints(List<PointMatch> p, List<PointMatch> p2) {
-        String mess = "";
         if ((p.size() == 1) && (p2.size() == 1)) {
             return MESSAGE_DND_1ELEMENTFOUND;
         } else {
@@ -934,7 +957,7 @@ public class SikuliAction {
 
     private String getScreenshotInBase64(String rootPictureFolder) {
         String picture = "";
-        String screenshotPath = rootPictureFolder + File.separator + "Screenshot.png";
+//        String screenshotPath = rootPictureFolder + File.separator + "Screenshot.png";
         InputStream istream = null;
         try {
 
