@@ -43,4 +43,10 @@ RUN chmod 0755 /opt/start-cerberus-robot-extension.sh
 # Supervisor configuration file
 COPY cerberus-robot-extension.conf /etc/supervisor/conf.d/
 
+RUN apt-get update -qqy && apt-get -qqy install libnss3-tools
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
 USER ${SEL_UID}
