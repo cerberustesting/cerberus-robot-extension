@@ -52,16 +52,22 @@ jobs:
         chmod 600 ./deploy_key
         sudo rsync -chav \
           -e 'ssh -i ./deploy_key -o StrictHostKeyChecking=no' ${{env.source-jar}} ${{env.destination}}
-    - name: Push file to Github Release
+    - name: Create or update GitHub Release
       env:
         GH_TOKEN: ${{ github.token }}
+        VERSION: ${{ steps.getVersion.outputs.version }}
       run: |
         git config --local user.email "github-actions@github.com"
         git config --local user.name "github-actions"
-        git tag -f -a ${{ steps.getVersion.outputs.version }} -m "Release ${{ steps.getVersion.outputs.version }}."
-        git push -f origin ${{ steps.getVersion.outputs.version }}
-        gh release list
-        gh release upload ${{ steps.getVersion.outputs.version }} ./target/cerberus-robot-extension-${{ steps.getVersion.outputs.version }}-full.jar --clobber
+        git tag -f -a "$VERSION" -m "Release $VERSION."
+        git push --force origin "$VERSION"
+        if ! gh release view "$VERSION" >/dev/null 2>&1; then
+          gh release create "$VERSION" \
+            --title "$VERSION" \
+            --notes "Automated build for $VERSION" \
+            --prerelease
+        fi
+        gh release upload "$VERSION" "./target/cerberus-robot-extension-${VERSION}-full.jar" --clobber
 
   docker:
     name: Docker Build & Push
