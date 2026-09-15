@@ -22,16 +22,24 @@
     <build>
         <plugins>
             <plugin>
+                <!-- Disable the default plain jar (no dependencies): only the assemblies below are published -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.4.1</version>
                 <configuration>
-                    <!-- get all project dependencies -->
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <finalName>${project.artifactId}-${project.version}-full</finalName>
-                    <appendAssemblyId>false</appendAssemblyId>
+                    <finalName>${project.artifactId}-${project.version}</finalName>
+                    <appendAssemblyId>true</appendAssemblyId>
                     <!-- MainClass in mainfest make a executable jar -->
                     <archive>
                         <manifest>
@@ -40,13 +48,57 @@
                     </archive>
                 </configuration>
                 <executions>
+                    <!-- full: bundles native libs for every platform (android, ios, linux, macosx, windows) -->
                     <execution>
-                        <id>make-assembly</id>
-                        <!-- bind to the packaging phase -->
-                        <phase>package</phase> 
+                        <id>full</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/full.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                    <!-- linux: bundles only linux-x86_64 native libs -->
+                    <execution>
+                        <id>linux</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/linux.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                    <!-- windows: bundles only windows-x86_64 native libs -->
+                    <execution>
+                        <id>windows</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/windows.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </execution>
+                    <!-- macarm: bundles only macosx-arm64 native libs -->
+                    <execution>
+                        <id>macarm</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/assembly/macarm.xml</descriptor>
+                            </descriptors>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -79,7 +131,13 @@
         </repository>
     </repositories>
     <dependencies>
-        <!-- OpenCV 4.13 via JavaCPP (Image recognition) -->
+        <!--
+            OpenCV 4.13 via JavaCPP (Image recognition).
+            opencv-platform/openblas-platform pull native binaries for every supported OS/arch
+            (android, ios, ppc64le, riscv64, ...); that's what the "full" jar/-full.jar ships.
+            The linux/windows/macarm assembly descriptors under src/assembly filter this same
+            dependency set down to a single platform's classifiers for the slim per-OS jars.
+        -->
         <dependency>
             <groupId>org.bytedeco</groupId>
             <artifactId>opencv</artifactId>

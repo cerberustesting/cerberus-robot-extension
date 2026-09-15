@@ -1,0 +1,47 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3 http://maven.apache.org/xsd/assembly-1.1.3.xsd">
+    <id>linux</id>
+    <formats>
+        <format>jar</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>/</outputDirectory>
+            <useProjectArtifact>true</useProjectArtifact>
+            <unpack>true</unpack>
+            <scope>runtime</scope>
+            <excludes>
+                <!-- keep only the linux-x86_64 native classifiers, drop every other platform -->
+                <exclude>org.bytedeco:javacpp:jar:android-arm64</exclude>
+                <exclude>org.bytedeco:javacpp:jar:android-x86_64</exclude>
+                <exclude>org.bytedeco:javacpp:jar:ios-arm64</exclude>
+                <exclude>org.bytedeco:javacpp:jar:ios-x86_64</exclude>
+                <exclude>org.bytedeco:javacpp:jar:linux-arm64</exclude>
+                <exclude>org.bytedeco:javacpp:jar:linux-ppc64le</exclude>
+                <exclude>org.bytedeco:javacpp:jar:linux-riscv64</exclude>
+                <exclude>org.bytedeco:javacpp:jar:macosx-arm64</exclude>
+                <exclude>org.bytedeco:javacpp:jar:macosx-x86_64</exclude>
+                <exclude>org.bytedeco:javacpp:jar:windows-arm64</exclude>
+                <exclude>org.bytedeco:javacpp:jar:windows-x86_64</exclude>
+                <exclude>org.bytedeco:openblas:jar:android-arm64</exclude>
+                <exclude>org.bytedeco:openblas:jar:android-x86_64</exclude>
+                <exclude>org.bytedeco:openblas:jar:ios-arm64</exclude>
+                <exclude>org.bytedeco:openblas:jar:ios-x86_64</exclude>
+                <exclude>org.bytedeco:openblas:jar:linux-arm64</exclude>
+                <exclude>org.bytedeco:openblas:jar:macosx-arm64</exclude>
+                <exclude>org.bytedeco:openblas:jar:macosx-x86_64</exclude>
+                <exclude>org.bytedeco:openblas:jar:windows-x86_64</exclude>
+                <exclude>org.bytedeco:opencv:jar:android-arm64</exclude>
+                <exclude>org.bytedeco:opencv:jar:android-x86_64</exclude>
+                <exclude>org.bytedeco:opencv:jar:ios-arm64</exclude>
+                <exclude>org.bytedeco:opencv:jar:ios-x86_64</exclude>
+                <exclude>org.bytedeco:opencv:jar:linux-arm64</exclude>
+                <exclude>org.bytedeco:opencv:jar:macosx-arm64</exclude>
+                <exclude>org.bytedeco:opencv:jar:macosx-x86_64</exclude>
+                <exclude>org.bytedeco:opencv:jar:windows-x86_64</exclude>
+            </excludes>
+        </dependencySet>
+    </dependencySets>
+</assembly>

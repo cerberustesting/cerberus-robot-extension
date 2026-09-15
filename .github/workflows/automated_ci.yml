@@ -45,8 +45,8 @@ jobs:
         mvn --batch-mode -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn clean install --file pom.xml
     - name: Push file to core VM
       env:
-        source-jar: 'target/cerberus-robot-extension*full.jar'
-        destination: 'debian@vm.cerberus-testing.org:/opt/delivery/'  
+        source-jar: 'target/cerberus-robot-extension*.jar'
+        destination: 'debian@vm.cerberus-testing.org:/opt/delivery/'
       run: |
         echo "${{secrets.DEPLOY_KEY}}" > deploy_key
         chmod 600 ./deploy_key
@@ -67,7 +67,7 @@ jobs:
             --notes "Automated build for $VERSION" \
             --prerelease
         fi
-        gh release upload "$VERSION" "./target/cerberus-robot-extension-${VERSION}-full.jar" --clobber
+        gh release upload "$VERSION" ./target/cerberus-robot-extension-"${VERSION}"-*.jar --clobber
 
   docker:
     name: Docker Build & Push
