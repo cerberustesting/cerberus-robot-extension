@@ -114,6 +114,14 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
+            <plugin>
+                <!-- No primary artifact anymore (default-jar is disabled, only attached assemblies exist) -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
         </plugins>
         
         <resources>
