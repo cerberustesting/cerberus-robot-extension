@@ -1,8 +1,7 @@
 ARG NAMESPACE=selenium
-ARG VERSION=4.44.0
+ARG VERSION=4.50.0
 ARG BASE=node-all-browsers
 FROM ${NAMESPACE}/${BASE}:${VERSION}
-LABEL authors=${AUTHORS}
 
 USER root
 
@@ -32,7 +31,7 @@ RUN ln -s /usr/lib/jni/libopencv_java454d.so /usr/lib/libopencv_java.so
 #==============================
 # Cerberus Robot Extension
 #==============================
-ARG CERBERUS_ROBOT_EXTENSION_VERSION=1.7.2
+ARG CERBERUS_ROBOT_EXTENSION_VERSION=2.0
 ENV CERBERUS_ROBOT_EXTENSION_VERSION=${CERBERUS_ROBOT_EXTENSION_VERSION}
 #COPY cerberus-robot-extension-${CERBERUS_ROBOT_EXTENSION_VERSION}-full.jar /opt/selenium/cerberus-robot-extension.jar
 RUN  wget --no-verbose http://vm.cerberus-testing.org/delivery/cerberus-robot-extension-$CERBERUS_ROBOT_EXTENSION_VERSION.jar -O /opt/selenium/cerberus-robot-extension.jar
