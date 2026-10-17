@@ -529,35 +529,55 @@ public class SikuliAction {
     private List<PointMatch> performWait(String action, Robot robot, long endTime, String picture, double minSimilarity, int xOffset, int yOffset) throws Exception {
 
         Mat template = imread(picture);
-        int i = 1;
-        List<PointMatch> p = new ArrayList<>();
-        while (System.currentTimeMillis() < endTime && i++ < 500) {
-            p.clear();
-            p = findAllPatternsOnScreen(action, robot, template, minSimilarity, xOffset, yOffset);
-            if (!p.isEmpty()) {
-                return p;
+
+        try {
+            int i = 1;
+
+            while (System.currentTimeMillis() < endTime && i++ < 500) {
+                List<PointMatch> p = findAllPatternsOnScreen(
+                        action, robot, template,
+                        minSimilarity, xOffset, yOffset);
+
+                if (!p.isEmpty()) {
+                    return p;
+                }
+
+                LOG.debug("[{}] Not found - Retrying again during {} ms",
+                        action, endTime - System.currentTimeMillis());
             }
-            LOG.debug("[{}] Not found - Retrying again during " + (endTime - System.currentTimeMillis()) + " ms", action);
+
+            return new ArrayList<>();
+
+        } finally {
+            template.release();
         }
-        template.release();
-        p.clear();
-        return new ArrayList<>();
     }
 
     private List<PointMatch> performWaitVanish(String action, Robot robot, long endTime, String picture, double minSimilarity, int xOffset, int yOffset) throws Exception {
 
         Mat template = imread(picture);
-        int i = 1;
-        List<PointMatch> p = new ArrayList<>();
-        while (System.currentTimeMillis() < endTime && i++ < 500) {
-            p.clear();
-            p = findAllPatternsOnScreen(action, robot, template, minSimilarity, xOffset, yOffset);
-            if (p.isEmpty()) {
-                return p;
+
+        try {
+            int i = 1;
+            List<PointMatch> p = new ArrayList<>();
+
+            while (System.currentTimeMillis() < endTime && i++ < 500) {
+                p = findAllPatternsOnScreen(
+                        action, robot, template,
+                        minSimilarity, xOffset, yOffset);
+
+                if (p.isEmpty()) {
+                    return p;
+                }
+
+                LOG.debug("[{}] Still here - Retrying again during {} ms",
+                        action, endTime - System.currentTimeMillis());
             }
-            LOG.debug("[{}] Still here - Retrying again during " + (endTime - System.currentTimeMillis()) + " ms", action);
+
+            return p;
+        } finally {
+            template.release();
         }
-        return p;
     }
 
     private String performMouseMove(String action, Robot robot, String text) throws InterruptedException, AWTException {
@@ -708,74 +728,93 @@ public class SikuliAction {
         return STATUS_OK;
     }
 
-    private List<PointMatch> findAllPatternsOnScreen(String action, Robot robot,
+    private List<PointMatch> findAllPatternsOnScreen(
+            String action,
+            Robot robot,
             Mat template,
             double minSimilarity,
             int xOffset,
             int yOffset) throws Exception {
 
-        Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
-        Mat screenshot = new Mat();
-        screenshot = bufferedImageToMat(robot.createScreenCapture(screenRect));
+        Rectangle screenRect
+                = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());
 
-        Mat result = new Mat();
-        matchTemplate(screenshot, template, result, TM_CCOEFF_NORMED);
+        // Le Mat retourné par bufferedImageToMat est directement utilisé.
+        try (Mat screenshot = bufferedImageToMat(
+                robot.createScreenCapture(screenRect)); Mat result = new Mat(); DoublePointer minVal = new DoublePointer(1); DoublePointer maxVal = new DoublePointer(1); org.bytedeco.opencv.opencv_core.Point minLoc
+                = new org.bytedeco.opencv.opencv_core.Point(); org.bytedeco.opencv.opencv_core.Point maxLoc
+                = new org.bytedeco.opencv.opencv_core.Point(); Rect rect = new Rect()) {
 
-        List<PointMatch> finalMatches = new ArrayList<>();
-        List<PointMatch> matches = new ArrayList<>();
+            matchTemplate(screenshot, template, result, TM_CCOEFF_NORMED);
 
-        // On copie result pour modification
-        DoublePointer minVal = new DoublePointer(1);
-        DoublePointer maxVal = new DoublePointer(1);
-        org.bytedeco.opencv.opencv_core.Point minLoc = new org.bytedeco.opencv.opencv_core.Point();
-        org.bytedeco.opencv.opencv_core.Point maxLoc = new org.bytedeco.opencv.opencv_core.Point();
+            List<PointMatch> matches = new ArrayList<>();
 
-        Rect rect = new Rect();
-        // On va rechercher toutes les occurrences
-        int i = 1;
-        while (true) {
+            int i = 0;
+            while (i < 100) {
+                i++;
 
-//            LOG.debug(i++);
-            minMaxLoc(result, minVal, maxVal, minLoc, maxLoc, null);
+                minMaxLoc(result, minVal, maxVal, minLoc, maxLoc, null);
 
-            if (maxVal.get() >= minSimilarity) {
-                // Point that match the template with the offset
+                if (maxVal.get() < minSimilarity) {
+                    break;
+                }
+
                 Point match = new Point(
-                        (int) maxLoc.x() + (template.cols() / 2) + xOffset,
-                        (int) maxLoc.y() + (template.rows() / 2) + yOffset
+                        (int) maxLoc.x() + template.cols() / 2 + xOffset,
+                        (int) maxLoc.y() + template.rows() / 2 + yOffset
                 );
-                // Point that match the template without the offset (used to identify the position of the template)
+
                 Point templateULCorner = new Point(
                         (int) maxLoc.x(),
                         (int) maxLoc.y()
                 );
-                PointMatch pointMatch = new PointMatch(match, maxVal.get(), templateULCorner, template.cols(), template.rows());
-                matches.add(pointMatch);
-                LOG.debug("[{}] Found occurrence at {} with similarity {} - cols {} rows {}", action, match, maxVal.get(), template.cols(), template.rows());
 
-                // Supprimer la zone trouvée pour ne pas la détecter à nouveau
+                matches.add(new PointMatch(
+                        match,
+                        maxVal.get(),
+                        templateULCorner,
+                        template.cols(),
+                        template.rows()
+                ));
+
+                LOG.debug(
+                        "[{}] Found occurrence #{} at {} with similarity {} - cols {} rows {}",
+                        action, i, match, maxVal.get(),
+                        template.cols(), template.rows()
+                );
+
                 int w = template.cols();
                 int h = template.rows();
+
                 rect.x((int) maxLoc.x());
                 rect.y((int) maxLoc.y());
                 rect.width(w);
                 rect.height(h);
-//                Rect rect = new Rect((int) maxLoc.x(), (int) maxLoc.y(), w, h);
-                rectangle(result, rect, new Scalar(-1, -1, -1, 0), FILLED, LINE_8, 0);
 
-            } else {
-                break; // plus d’occurrences
+                try (Scalar color = new Scalar(-1, -1, -1, 0)) {
+                    rectangle(result, rect, color, FILLED, LINE_8, 0);
+                }
             }
-        }
 
-        // Clean recurent rectangle that overlap.
-        finalMatches = cleanPointsThatOverlap(matches, template.rows(), template.cols());
-        if (matches.isEmpty()) {
-            LOG.debug("[{}] No occurrences found with similarity >= {}", action, minSimilarity);
-        } else {
-            LOG.debug("[{}] {} occurrence(s) found with similarity >= {}. {} kept after cleaning", action, matches.size(), minSimilarity, finalMatches.size());
+            List<PointMatch> finalMatches
+                    = cleanPointsThatOverlap(
+                            matches, template.rows(), template.cols());
+
+            if (matches.isEmpty()) {
+                LOG.debug(
+                        "[{}] No occurrences found with similarity >= {}",
+                        action, minSimilarity
+                );
+            } else {
+                LOG.debug(
+                        "[{}] {} occurrence(s) found with similarity >= {}. {} kept after cleaning",
+                        action, matches.size(), minSimilarity,
+                        finalMatches.size()
+                );
+            }
+
+            return finalMatches;
         }
-        return finalMatches;
     }
 
     private List<PointMatch> cleanPointsThatOverlap(List<PointMatch> initPoints, int height, int width) {
