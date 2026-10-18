@@ -8,6 +8,7 @@ package org.cerberus.robot.extension.service.sikuli;
 import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -26,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -476,7 +478,7 @@ public class SikuliAction {
                         }
                         LOG.info("[{}] Checking CPU from process name {} with strict filter {}.", action, processName, filterStrict);
                         result.put("system", systemAction.getCPU(processName, filterStrict));
-
+                        System.gc();
                         break;
                 }
 
@@ -532,7 +534,7 @@ public class SikuliAction {
 
         try {
             int i = 1;
-
+            boolean addTempo = false;
             while (System.currentTimeMillis() < endTime && i++ < 500) {
                 List<PointMatch> p = findAllPatternsOnScreen(
                         action, robot, template,
@@ -542,8 +544,15 @@ public class SikuliAction {
                     return p;
                 }
 
-                LOG.debug("[{}] Not found - Retrying again during {} ms",
-                        action, endTime - System.currentTimeMillis());
+                addTempo = (endTime - System.currentTimeMillis() > 5000);
+                if (addTempo) {
+                    LOG.debug("[{}] Not found - Retrying again during {} ms (after a 2s tempo)",
+                            action, endTime - System.currentTimeMillis());
+                    Thread.sleep(2000);
+                } else {
+                    LOG.debug("[{}] Not found - Retrying again during {} ms",
+                            action, endTime - System.currentTimeMillis());
+                }
             }
 
             return new ArrayList<>();
@@ -559,6 +568,7 @@ public class SikuliAction {
 
         try {
             int i = 1;
+            boolean addTempo = false;
             List<PointMatch> p = new ArrayList<>();
 
             while (System.currentTimeMillis() < endTime && i++ < 500) {
@@ -570,8 +580,15 @@ public class SikuliAction {
                     return p;
                 }
 
-                LOG.debug("[{}] Still here - Retrying again during {} ms",
-                        action, endTime - System.currentTimeMillis());
+                addTempo = (endTime - System.currentTimeMillis() > 5000);
+                if (addTempo) {
+                    LOG.debug("[{}] Still here - Retrying again during {} ms (after a 2s tempo)",
+                            action, endTime - System.currentTimeMillis());
+                    Thread.sleep(2000);
+                } else {
+                    LOG.debug("[{}] Still here - Retrying again during {} ms",
+                            action, endTime - System.currentTimeMillis());
+                }
             }
 
             return p;
@@ -674,37 +691,45 @@ public class SikuliAction {
          * stable situation. For example, we stop pressing the mouse button in
          * case it was pressed.
          */
-        // Stop Video recording
+        // Stop video recording
         new ProcessBuilder("pkill", "-f", CMD_STOPVIDEO).start();
-        // Wait that process close correctly.
+
+        // Wait for the recording process to close
         Thread.sleep(2000);
 
-        // get and encode video file to Base64
-        File file = new File(videoFileName);
-        // File exist
+        Path path = Paths.get(videoFileName);
+        File file = path.toFile();
+
         if (!file.exists() || !file.isFile()) {
             return null;
         }
-        // Not too big and not too small
-        long size = file.length();
+
+        // If the video is not required, do not load it into memory.
+        if (!withFile) {
+            Files.deleteIfExists(path);
+            return null;
+        }
+
+        long size = Files.size(path);
+
         if (size < 10) {
             LOG.warn("Video file '{}' is too small !!", videoFileName);
             return null;
         }
-        if (size > 20 * 1024 * 1024) { // 20 MB
+
+        if (size > 20 * 1024 * 1024) {
             LOG.warn("Video file '{}' is too big !!", videoFileName);
             return null;
         }
+
         LOG.info("Prepare the video file back to Cerberus");
-        // Base64 Encoding
-        byte[] fileContent = Files.readAllBytes(Paths.get(videoFileName));
-        String videoBase64 = Base64.getEncoder().encodeToString(fileContent);
-        // Clean file mp4
-        file.delete();
-        if (withFile) {
-            return videoBase64;
+
+        try {
+            byte[] fileContent = Files.readAllBytes(path);
+            return Base64.getEncoder().encodeToString(fileContent);
+        } finally {
+            Files.deleteIfExists(path);
         }
-        return null;
     }
 
     private String performEndExecution(String action, Robot robot) throws InterruptedException, AWTException, IOException {
@@ -909,18 +934,35 @@ public class SikuliAction {
     }
 
     private static Mat bufferedImageToMat(BufferedImage bi) {
+        BufferedImage converted = new BufferedImage(
+                bi.getWidth(),
+                bi.getHeight(),
+                BufferedImage.TYPE_3BYTE_BGR
+        );
 
-        BufferedImage converted
-                = new BufferedImage(bi.getWidth(), bi.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+        Graphics2D graphics = converted.createGraphics();
+        try {
+            graphics.drawImage(bi, 0, 0, null);
+        } finally {
+            graphics.dispose();
+        }
 
-        converted.getGraphics().drawImage(bi, 0, 0, null);
+        byte[] pixels = ((DataBufferByte) converted.getRaster()
+                .getDataBuffer()).getData();
 
-        byte[] pixels = ((DataBufferByte) converted.getRaster().getDataBuffer()).getData();
+        Mat mat = new Mat(
+                converted.getHeight(),
+                converted.getWidth(),
+                CV_8UC3
+        );
 
-        Mat mat = new Mat(converted.getHeight(), converted.getWidth(), CV_8UC3);
-        mat.data().put(pixels);
-
-        return mat;
+        try {
+            mat.data().put(pixels);
+            return mat;
+        } catch (RuntimeException | Error e) {
+            mat.release();
+            throw e;
+        }
     }
 
     private void typeKeyboard(String action, Robot robot, String text, String modifier, double delay) {
