@@ -13,7 +13,12 @@ on:
       extension_version:
         description: 'Cerberus Robot Extension version (jar on vm.cerberus-testing.org/delivery)'
         required: true
-        default: '2.1-SNAPSHOT-linux'
+        default: '2.1-SNAPSHOT'
+        type: string
+      extension_classifier:
+        description: 'Jar classifier appended to the extension version (ex: linux). Leave empty for none'
+        required: false
+        default: 'linux'
         type: string
       push_latest:
         description: 'Also tag as latest'
@@ -23,6 +28,8 @@ on:
 
 env:
   IMAGE: cerberustesting/node-all-browsers
+  # Full jar version (with classifier), used to download the jar. The image tag only uses extension_version.
+  EXTENSION_JAR_VERSION: ${{ inputs.extension_classifier && format('{0}-{1}', inputs.extension_version, inputs.extension_classifier) || inputs.extension_version }}
 
 jobs:
   docker:
@@ -53,7 +60,7 @@ jobs:
           tags: local/node-all-browsers:check
           build-args: |
             VERSION=${{ inputs.selenium_version }}
-            CERBERUS_ROBOT_EXTENSION_VERSION=${{ inputs.extension_version }}
+            CERBERUS_ROBOT_EXTENSION_VERSION=${{ env.EXTENSION_JAR_VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -89,7 +96,7 @@ jobs:
           tags: ${{ steps.tags.outputs.tags }}
           build-args: |
             VERSION=${{ inputs.selenium_version }}
-            CERBERUS_ROBOT_EXTENSION_VERSION=${{ inputs.extension_version }}
+            CERBERUS_ROBOT_EXTENSION_VERSION=${{ env.EXTENSION_JAR_VERSION }}
           labels: |
             org.opencontainers.image.title=Cerberus Node All Browsers
             org.opencontainers.image.version=${{ steps.tags.outputs.version }}
@@ -99,7 +106,7 @@ jobs:
             org.cerberus-testing.chrome=${{ steps.browsers.outputs.chrome }}
             org.cerberus-testing.firefox=${{ steps.browsers.outputs.firefox }}
             org.cerberus-testing.edge=${{ steps.browsers.outputs.edge }}
-            org.cerberus-testing.robot-extension=${{ inputs.extension_version }}
+            org.cerberus-testing.robot-extension=${{ env.EXTENSION_JAR_VERSION }}
           cache-from: type=gha
 
       - name: Summary
@@ -113,7 +120,7 @@ jobs:
             echo "| Chrome | ${{ steps.browsers.outputs.chrome }} |"
             echo "| Firefox | ${{ steps.browsers.outputs.firefox }} |"
             echo "| Edge | ${{ steps.browsers.outputs.edge }} |"
-            echo "| Robot Extension | ${{ inputs.extension_version }} |"
+            echo "| Robot Extension | ${{ env.EXTENSION_JAR_VERSION }} |"
             echo ""
             echo "Tags pushed: \`${{ steps.tags.outputs.tags }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
