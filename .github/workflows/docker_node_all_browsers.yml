@@ -8,12 +8,12 @@ on:
       selenium_version:
         description: 'Selenium base image version (selenium/node-all-browsers:<version>)'
         required: true
-        default: '4.44.0'
+        default: '4.51.0'
         type: string
       extension_version:
         description: 'Cerberus Robot Extension version (jar on vm.cerberus-testing.org/delivery)'
         required: true
-        default: '2.1-SNAPSHOT'
+        default: '2.1-SNAPSHOT-linux'
         type: string
       push_latest:
         description: 'Also tag as latest'
