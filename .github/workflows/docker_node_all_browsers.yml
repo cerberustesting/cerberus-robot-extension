@@ -1,12 +1,10 @@
 name: Docker Node All Browsers (manual)
 
+run-name: Docker Node All Browsers ${{ inputs.selenium_version }}-${{ inputs.extension_version }}${{ inputs.push_latest && ' (+latest)' || '' }}
+
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version tag of the image (ex: 4.44.0 or 4.44.0-1)'
-        required: true
-        type: string
       selenium_version:
         description: 'Selenium base image version (selenium/node-all-browsers:<version>)'
         required: true
@@ -21,11 +19,6 @@ on:
         description: 'Also tag as latest'
         required: true
         default: false
-        type: boolean
-      push_detailed_tag:
-        description: 'Also push a detailed tag (<version>-c<chrome>-f<firefox>-e<edge>-ext<ext>)'
-        required: true
-        default: true
         type: boolean
 
 env:
@@ -76,20 +69,16 @@ jobs:
           echo "chrome=$chrome"   >> "$GITHUB_OUTPUT"
           echo "firefox=$firefox" >> "$GITHUB_OUTPUT"
           echo "edge=$edge"       >> "$GITHUB_OUTPUT"
-          echo "chrome_major=${chrome%%.*}"   >> "$GITHUB_OUTPUT"
-          echo "firefox_major=${firefox%%.*}" >> "$GITHUB_OUTPUT"
-          echo "edge_major=${edge%%.*}"       >> "$GITHUB_OUTPUT"
 
       - name: Compute tags
         id: tags
         run: |
-          tags="${IMAGE}:${{ inputs.version }}"
+          version="${{ inputs.selenium_version }}-${{ inputs.extension_version }}"
+          tags="${IMAGE}:${version}"
           if [ "${{ inputs.push_latest }}" = "true" ]; then
             tags="$tags,${IMAGE}:latest"
           fi
-          if [ "${{ inputs.push_detailed_tag }}" = "true" ]; then
-            tags="$tags,${IMAGE}:${{ inputs.version }}-c${{ steps.browsers.outputs.chrome_major }}-f${{ steps.browsers.outputs.firefox_major }}-e${{ steps.browsers.outputs.edge_major }}-ext${{ inputs.extension_version }}"
-          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tags=$tags" >> "$GITHUB_OUTPUT"
 
       - name: Build and push Docker image
@@ -103,7 +92,7 @@ jobs:
             CERBERUS_ROBOT_EXTENSION_VERSION=${{ inputs.extension_version }}
           labels: |
             org.opencontainers.image.title=Cerberus Node All Browsers
-            org.opencontainers.image.version=${{ inputs.version }}
+            org.opencontainers.image.version=${{ steps.tags.outputs.version }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.cerberus-testing.selenium=${{ inputs.selenium_version }}
@@ -116,7 +105,7 @@ jobs:
       - name: Summary
         run: |
           {
-            echo "## ${IMAGE}:${{ inputs.version }}"
+            echo "## ${IMAGE}:${{ steps.tags.outputs.version }}"
             echo ""
             echo "| Component | Version |"
             echo "|---|---|"
