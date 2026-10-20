@@ -86,9 +86,6 @@ public class ExecuteSikuliAction extends HttpServlet {
             dirVideo.mkdir();
         }
 
-        // Forcing a garbage collection
-        System.gc();
-
         PrintStream os = null;
         BufferedReader is = null;
         StringBuilder sb = new StringBuilder();
